@@ -1,7 +1,7 @@
 using Rankflix.Application.Domain;
 using Rankflix.Application.Domain.Media;
 
-namespace Rankflix.Application.Service.External;
+namespace Rankflix.Application.Service.External.Media;
 
 public interface IContentProvider
 {

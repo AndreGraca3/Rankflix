@@ -4,9 +4,9 @@ using Rankflix.Application.Domain.Media;
 using TMDbLib.Client;
 using TMDbLib.Objects.Trending;
 
-namespace Rankflix.Application.Service.External;
+namespace Rankflix.Application.Service.External.Media;
 
-public class TmdbContentProvider(TMDbClient client) : IContentProvider
+public class TmdbContentProvider(TMDbClient client) : IContentProvider, IHostedService
 {
     private const string BaseImageUrl = "https://image.tmdb.org/t/p/original";
     private const int TmdbItemsPerPage = 20;
@@ -14,27 +14,33 @@ public class TmdbContentProvider(TMDbClient client) : IContentProvider
     private readonly Dictionary<int, string> _movieGenres = new();
     private readonly Dictionary<int, string> _tvShowGenres = new();
 
-    public async Task InitializeGenresAsync()
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var movieGenres = await client.GetMovieGenresAsync();
-        var tvShowGenres = await client.GetTvGenresAsync();
+        var movieGenresTask = client.GetMovieGenresAsync(cancellationToken);
+        var tvShowGenresTask = client.GetTvGenresAsync(cancellationToken);
+        await Task.WhenAll(movieGenresTask, tvShowGenresTask);
 
-        foreach (var genre in movieGenres)
+        foreach (var genre in movieGenresTask.Result)
         {
             _movieGenres.Add(genre.Id, genre.Name);
         }
 
-        foreach (var genre in tvShowGenres)
+        foreach (var genre in tvShowGenresTask.Result)
         {
             _tvShowGenres.Add(genre.Id, genre.Name);
         }
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 
     public async Task<PaginatedResult<MovieItem>> SearchMovies(string? title, int page)
     {
         if (title.IsNullOrEmpty())
             return new PaginatedResult<MovieItem>(new List<MovieItem>(), 0, 0, TmdbItemsPerPage);
-        
+
         var paginatedMovies = await client.SearchMovieAsync(title, page);
 
         return new PaginatedResult<MovieItem>(
@@ -60,7 +66,7 @@ public class TmdbContentProvider(TMDbClient client) : IContentProvider
     {
         if (title.IsNullOrEmpty())
             return new PaginatedResult<TvShowItem>(new List<TvShowItem>(), 0, 0, TmdbItemsPerPage);
-        
+
         var paginatedTvShows = await client.SearchTvShowAsync(title, page);
 
         return new PaginatedResult<TvShowItem>(

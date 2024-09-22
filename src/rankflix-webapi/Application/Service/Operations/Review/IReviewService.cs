@@ -1,4 +1,5 @@
 using Rankflix.Application.Domain;
+using Rankflix.Application.Domain.Account;
 
 namespace Rankflix.Application.Service.Operations.Review;
 

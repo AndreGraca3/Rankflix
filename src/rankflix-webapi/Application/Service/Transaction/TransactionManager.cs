@@ -1,4 +1,3 @@
-using Rankflix.Infrastructure;
 using Rankflix.Infrastructure.Data;
 
 namespace Rankflix.Application.Service.Transaction;

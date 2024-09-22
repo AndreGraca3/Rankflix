@@ -13,7 +13,7 @@ public class UserOutputModel
 
 public static class UserOutputModelExtensions
 {
-    public static UserOutputModel ToOutputModel(this Domain.User user)
+    public static UserOutputModel ToOutputModel(this Domain.Account.User user)
     {
         return new UserOutputModel
         {

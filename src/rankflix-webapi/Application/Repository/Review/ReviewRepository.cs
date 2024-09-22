@@ -1,16 +1,17 @@
 using Rankflix.Application.Domain;
+using Rankflix.Application.Domain.Account;
 using Rankflix.Infrastructure.Data;
 
-namespace Rankflix.Application.Repository;
+namespace Rankflix.Application.Repository.Review;
 
 public class ReviewRepository(RankflixDataContext dbContext): IReviewRepository
 {
-    public Task<PaginatedResult<Review>> GetReviewsAsync(int page)
+    public Task<PaginatedResult<Domain.Review>> GetReviewsAsync(int page)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Review> GetReviewByIdAsync(int reviewId)
+    public Task<Domain.Review> GetReviewByIdAsync(int reviewId)
     {
         throw new NotImplementedException();
     }
@@ -20,7 +21,7 @@ public class ReviewRepository(RankflixDataContext dbContext): IReviewRepository
         throw new NotImplementedException();
     }
 
-    public Task<Review> UpdateReviewAsync(ReviewId reviewId, int rating, string comment, UserId userId)
+    public Task<Domain.Review> UpdateReviewAsync(ReviewId reviewId, int rating, string comment, UserId userId)
     {
         throw new NotImplementedException();
     }

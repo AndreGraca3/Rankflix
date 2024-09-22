@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rankflix.Application.Domain;
 using Rankflix.Application.Domain.Media;
 using Rankflix.Application.Service.External;
+using Rankflix.Application.Service.External.Media;
 
 namespace Rankflix.Application.Http.Controllers.Media;
 

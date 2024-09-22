@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Rankflix.Infrastructure;
 
 namespace Rankflix;
@@ -24,6 +25,7 @@ public static class Program
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
@@ -31,14 +33,23 @@ public static class Program
 
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
+        builder.Services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+        // builder.Services.ConfigureOptions<JwtOptionsSetup>();
+        // builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+        // builder.Services.Configure<RefreshTokenOptions>(builder.Configuration.GetSection("RefreshToken"));
+
         builder.Services.AddControllers();
 
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services
+            .AddEndpointsApiExplorer()
+            .AddSwaggerGen();
 
         builder.Services
+            .AddRankflixConfigurations(builder.Configuration)
             .AddContentProvider(builder.Configuration)
             .AddSqlServer(builder.Configuration)
-            .AddRankflixDataServices();
+            .AddRankflixDependencies();
     }
 }
