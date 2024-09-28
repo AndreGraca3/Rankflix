@@ -9,8 +9,9 @@ namespace Rankflix.Application.Http.Controllers.Media;
 [ApiController]
 public class TvController(IContentProvider contentProvider) : ControllerBase
 {
-    [HttpGet(Uris.Tv.Base)]
-    public async Task<ActionResult<PaginatedResult<TvShowItem>>> GetTvShowsAsync([FromQuery] string? title, [FromQuery] int page = 1)
+    [HttpGet(Uris.Tv.Search)]
+    public async Task<ActionResult<PaginatedResult<TvShowItem>>> SearchTvShowsAsync([FromQuery] string? title,
+        [FromQuery] int page = 1)
     {
         return await contentProvider.SearchTvShows(title, page);
     }

@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi.Models;
 using Rankflix.Infrastructure;
 
 namespace Rankflix;
@@ -34,20 +36,15 @@ public static class Program
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer();
-        // builder.Services.ConfigureOptions<JwtOptionsSetup>();
-        // builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
-        // builder.Services.Configure<RefreshTokenOptions>(builder.Configuration.GetSection("RefreshToken"));
-
-        builder.Services.AddControllers();
+            .AddRankflixAuthentication(builder.Configuration)
+            .AddControllers()
+            .AddJsonOptions(o => { o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
         builder.Services
             .AddEndpointsApiExplorer()
             .AddSwaggerGen();
 
         builder.Services
-            .AddRankflixConfigurations(builder.Configuration)
             .AddContentProvider(builder.Configuration)
             .AddSqlServer(builder.Configuration)
             .AddRankflixDependencies();

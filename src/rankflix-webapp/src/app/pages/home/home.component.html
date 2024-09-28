@@ -1,0 +1,5 @@
+<h1 class="text-3xl text-red-500">Hello world!</h1>
+
+@for (mediaItem of mediaItems; track $index) {
+<app-media-card [media]="mediaItem" />
+}

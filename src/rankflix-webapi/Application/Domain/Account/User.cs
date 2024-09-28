@@ -13,4 +13,6 @@ public class User
     public required DateTime CreatedAt { get; set; }
 }
 
+public record UserItem(int Id, string Username, string? AvatarUrl);
+
 public record UserId(int Value);

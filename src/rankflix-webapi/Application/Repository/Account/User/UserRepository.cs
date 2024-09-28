@@ -8,14 +8,15 @@ namespace Rankflix.Application.Repository.Account.User;
 
 public class UserRepository(RankflixDataContext dataContext) : IUserRepository
 {
-    private const int PageSize = 20;
-
-    public async Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int page, string? username)
+    public async Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int skip, int take, string? username)
     {
-        var skip = (page - 1) * PageSize;
         var query = dataContext.User
+            .Where(u => username == null || u.Username.Contains(username));
+
+        var paginatedUsers = await query
+            .OrderBy(u => u.Id)
             .Skip(skip)
-            .Take(PageSize)
+            .Take(take)
             .Select(u => new Domain.Account.User
             {
                 Id = new UserId(u.Id),
@@ -23,10 +24,9 @@ public class UserRepository(RankflixDataContext dataContext) : IUserRepository
                 Email = u.Email,
                 AvatarUrl = u.AvatarUrl,
                 CreatedAt = u.CreatedAt
-            });
-
-        var paginatedUsers = await query.ToListAsync();
-        return new PaginatedResult<Domain.Account.User>(paginatedUsers, query.Count(), skip, PageSize);
+            }).ToListAsync();
+        var total = await query.CountAsync();
+        return new PaginatedResult<Domain.Account.User>(paginatedUsers, total, skip, take);
     }
 
     public async Task<Domain.Account.User?> GetUserByIdAsync(UserId userId)
@@ -72,31 +72,6 @@ public class UserRepository(RankflixDataContext dataContext) : IUserRepository
                 CreatedAt = u.CreatedAt
             })
             .FirstOrDefaultAsync();
-    }
-
-    public async Task<Domain.Account.User?> GetUserByEmailOrUsernameAsync(string email, string username)
-    {
-        return await dataContext.User
-            .Where(u => u.Email == email || u.Username == username)
-            .Select(u => new Domain.Account.User
-            {
-                Id = new UserId(u.Id),
-                Username = u.Username,
-                Email = u.Email,
-                AvatarUrl = u.AvatarUrl,
-                CreatedAt = u.CreatedAt
-            })
-            .FirstOrDefaultAsync();
-    }
-
-    public async Task<(bool EmailExists, bool UsernameExists)> CheckUserUniquenessAsync(string email, string username)
-    {
-        var user = await dataContext.User
-            .Where(u => u.Email == email || u.Username == username)
-            .Select(u => new { u.Email, u.Username })
-            .FirstOrDefaultAsync();
-
-        return (user?.Email == email, user?.Username == username);
     }
 
     public async Task<UserId> AddUserAsync(string email, string username, string? avatarUrl)

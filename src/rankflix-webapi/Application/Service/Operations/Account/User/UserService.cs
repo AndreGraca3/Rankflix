@@ -7,9 +7,10 @@ namespace Rankflix.Application.Service.Operations.Account.User;
 
 public class UserService(IUserRepository userRepository, ITransactionManager transactionManager) : IUserService
 {
-    public async Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int page, string? username)
+    public async Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int skip, int take, string? username)
     {
-        return await transactionManager.ExecuteAsync(async () => await userRepository.GetUsersAsync(page, username));
+        return await transactionManager.ExecuteAsync(async () =>
+            await userRepository.GetUsersAsync(skip, take, username));
     }
 
     public async Task<Domain.Account.User?> GetUserByIdAsync(int id)

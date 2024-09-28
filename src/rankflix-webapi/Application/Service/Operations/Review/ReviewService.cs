@@ -8,12 +8,12 @@ namespace Rankflix.Application.Service.Operations.Review;
 
 public class ReviewService(IReviewRepository reviewRepository, ITransactionManager transactionManager) : IReviewService
 {
-    public async Task<PaginatedResult<Domain.Review>> GetReviewsAsync(int page)
+    public async Task<PaginatedResult<Domain.Review>> GetReviewsAsync(int skip, int take)
     {
-        return await transactionManager.ExecuteAsync(async () => await reviewRepository.GetReviewsAsync(page));
+        return await transactionManager.ExecuteAsync(async () => await reviewRepository.GetReviewsAsync(skip, take));
     }
 
-    public async Task<Domain.Review> GetReviewByIdAsync(int reviewId)
+    public async Task<Domain.Review> GetReviewByIdAsync(ReviewId reviewId)
     {
         return await transactionManager.ExecuteAsync(async () => await reviewRepository.GetReviewByIdAsync(reviewId));
     }
@@ -24,15 +24,42 @@ public class ReviewService(IReviewRepository reviewRepository, ITransactionManag
             await reviewRepository.AddReviewAsync(rating, comment, userId));
     }
 
-    public Task<Domain.Review> UpdateReviewAsync(ReviewId reviewId, int rating, string comment, UserId userId)
+    public async Task<Domain.Review> UpdateReviewAsync(ReviewId reviewId, int rating, string comment, UserId userId)
     {
-        // update only if 5 minutes have passed since the review was created and the user is the owner
-        throw new NotImplementedException();
+        return await transactionManager.ExecuteAsync(async () =>
+        {
+            var review = await reviewRepository.GetReviewByIdAsync(reviewId);
+            if (!review.IsOwner(userId))
+            {
+                throw new UnauthorizedAccessException("User is not the owner of the review");
+            }
+
+            if (review.IsTooOld())
+            {
+                throw new InvalidOperationException("Review is too old to be updated");
+            }
+
+            return await reviewRepository.UpdateReviewAsync(reviewId, rating, comment);
+        });
     }
 
-    public Task DeleteReviewAsync(int reviewId, UserId userId)
+    public async Task DeleteReviewAsync(ReviewId reviewId, UserId userId)
     {
-        // delete only if 5 minutes have passed since the review was created and the user is the owner
-        throw new NotImplementedException();
+        await transactionManager.ExecuteAsync(async () =>
+        {
+            var review = await reviewRepository.GetReviewByIdAsync(reviewId);
+            if (!review.IsOwner(userId))
+            {
+                throw new UnauthorizedAccessException("User is not the owner of the review");
+            }
+
+            if (review.IsTooOld())
+            {
+                throw new InvalidOperationException("Review is too old to be deleted");
+            }
+
+            await reviewRepository.DeleteReviewAsync(reviewId);
+            return Task.CompletedTask;
+        });
     }
 }

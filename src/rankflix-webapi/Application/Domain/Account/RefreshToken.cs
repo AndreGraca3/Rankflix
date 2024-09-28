@@ -17,6 +17,11 @@ public class RefreshTokenItem
 
     public required UserId UserId { get; init; }
     
+    public bool IsExpired(TimeSpan duration)
+    {
+        return CreatedAt.Add(duration) < DateTime.UtcNow;
+    }
+    
     public RefreshToken ToRefreshToken(DateTime expiresAt)
     {
         return new RefreshToken

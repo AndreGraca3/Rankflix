@@ -24,6 +24,7 @@ public static class Uris
     public static class Movie
     {
         public const string Base = $"{ApiBase}/movies";
+        public const string Search = $"{Base}/search";
         public const string Trending = $"{Base}/trending";
         public const string MovieByTmdbId = $"{Base}/{{tmdbId}}";
     }
@@ -31,6 +32,7 @@ public static class Uris
     public static class Tv
     {
         public const string Base = $"{ApiBase}/tv";
+        public const string Search = $"{Base}/search";
         public const string Trending = $"{Base}/trending";
         public const string TvShowByTmdbId = $"{Base}/{{tmdbId}}";
     }
@@ -41,6 +43,15 @@ public static class Uris
         public const string ReviewById = $"{Base}/{{reviewId}}";
 
         public static string BuildReviewByIdUri(Guid id) => ReviewById.ExpandUri(id);
+    }
+
+    public static class Group
+    {
+        public const string Base = $"{ApiBase}/groups";
+        public const string GroupById = $"{Base}/{{groupId}}";
+        public const string Watchlist = GroupById + "/watchlist";
+
+        public static string BuildGroupByIdUri(Guid id) => GroupById.ExpandUri(id);
     }
 
     private static string ExpandUri(this string input, params object[] args)

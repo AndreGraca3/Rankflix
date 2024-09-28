@@ -9,8 +9,8 @@ namespace Rankflix.Application.Http.Controllers.Media;
 [ApiController]
 public class MovieController(IContentProvider contentProvider) : ControllerBase
 {
-    [HttpGet(Uris.Movie.Base)]
-    public async Task<ActionResult<PaginatedResult<MovieItem>>> GetMoviesAsync([FromQuery] string? title,
+    [HttpGet(Uris.Movie.Search)]
+    public async Task<ActionResult<PaginatedResult<MovieItem>>> SearchMoviesAsync([FromQuery] string? title,
         [FromQuery] int page = 1)
     {
         return await contentProvider.SearchMovies(title, page);

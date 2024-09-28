@@ -7,6 +7,14 @@ namespace Rankflix.Application.Repository.Account.Token;
 
 public class TokenRepository(RankflixDataContext dataContext) : ITokenRepository
 {
+    public async Task<RefreshTokenItem?> GetRefreshTokenByValueAsync(Guid value)
+    {
+        var refreshTokenEntity = await dataContext.RefreshToken
+            .FirstOrDefaultAsync(rt => rt.Value == value);
+
+        return refreshTokenEntity?.ToRefreshTokenItem();
+    }
+
     public async Task<RefreshTokenItem> AddRefreshTokenAsync(UserId userId)
     {
         var refreshToken = new RefreshTokenEntity

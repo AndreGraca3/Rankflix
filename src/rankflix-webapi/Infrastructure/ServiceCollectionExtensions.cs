@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Rankflix.Application.Repository.Account.Token;
 using Rankflix.Application.Repository.Account.User;
 using Rankflix.Application.Repository.Review;
@@ -10,6 +12,7 @@ using Rankflix.Application.Service.Operations.Review;
 using Rankflix.Application.Service.Transaction;
 using Rankflix.Infrastructure.Auth;
 using Rankflix.Infrastructure.Data;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using TMDbLib.Client;
 
 namespace Rankflix.Infrastructure;
@@ -53,12 +56,45 @@ public static class ServiceCollectionExtensions
             .AddScoped<IReviewRepository, ReviewRepository>();
     }
 
-    public static IServiceCollection AddRankflixConfigurations(this IServiceCollection services,
+    public static IServiceCollection AddRankflixAuthentication(this IServiceCollection services,
         IConfiguration configuration)
     {
-        return services
-            .Configure<RefreshTokenOptions>(configuration.GetSection("RefreshToken"))
+        services.AddAuthentication(o =>
+        {
+            o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer();
+
+        return services.Configure<RefreshTokenOptions>(configuration.GetSection("RefreshToken"))
             .Configure<JwtOptions>(configuration.GetSection("Jwt"))
-            .ConfigureOptions<JwtBearerOptionsSetup>();
+            .ConfigureOptions<JwtBearerOptionsSetup>()
+            .Configure<SwaggerGenOptions>(
+                o =>
+                {
+                    o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                    {
+                        In = ParameterLocation.Header,
+                        Description = "Please insert JWT with Bearer into field",
+                        Type = SecuritySchemeType.Http,
+                        BearerFormat = "JWT",
+                        Scheme = "Bearer"
+                    });
+
+                    o.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            Array.Empty<string>()
+                        }
+                    });
+                }
+            );
     }
 }

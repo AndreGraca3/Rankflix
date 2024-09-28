@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rankflix.Infrastructure.Data.Tables;
 
-[Table("rank_list")]
-public class RankListEntity
+[Table("rank_group")]
+public class RankGroupEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id")]
@@ -11,4 +11,7 @@ public class RankListEntity
 
     [Column("name")]
     public required string Name { get; init; }
+    
+    [Column("owner_id")]
+    public required int OwnerId { get; init; }
 }

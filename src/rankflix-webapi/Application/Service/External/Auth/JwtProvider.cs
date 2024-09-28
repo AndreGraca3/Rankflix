@@ -30,9 +30,9 @@ internal sealed class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
             _options.Audience,
             claims,
             null,
-            DateTime.Now.AddMinutes(_options.ExpireMinutes),
+            DateTime.UtcNow.AddMinutes(_options.ExpireMinutes),
             signingCredentials);
-
+        
         var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
         return new AccessToken { Value = tokenValue, ExpiresAt = token.ValidTo };
     }

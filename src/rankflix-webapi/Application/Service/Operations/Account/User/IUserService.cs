@@ -5,7 +5,7 @@ namespace Rankflix.Application.Service.Operations.Account.User;
 
 public interface IUserService
 {
-    Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int page, string? username);
+    Task<PaginatedResult<Domain.Account.User>> GetUsersAsync(int skip, int take, string? username);
 
     Task<Domain.Account.User?> GetUserByIdAsync(int id);
 

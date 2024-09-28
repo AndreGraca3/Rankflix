@@ -12,4 +12,10 @@ public class RankflixDataContext(DbContextOptions options) : DbContext(options)
     public DbSet<MediaEntity> Media { get; set; }
 
     public DbSet<ReviewEntity> Review { get; set; }
+    
+    public DbSet<RankGroupEntity> Group { get; set; }
+    
+    public DbSet<RankGroupMemberEntity> GroupMember { get; set; }
+    
+    public DbSet<RankGroupWatchListEntryEntity> GroupWatchListEntry { get; set; }
 }

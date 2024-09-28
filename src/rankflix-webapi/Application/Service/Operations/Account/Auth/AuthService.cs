@@ -22,7 +22,7 @@ public class AuthService(
     {
         return await transactionManager.ExecuteAsync(async () =>
         {
-            var email = "user";
+            var email = "user@gmail.co";
             var username = "user";
             string? avatar = null;
 
@@ -36,14 +36,23 @@ public class AuthService(
         });
     }
 
-    private async Task<RefreshToken> GenerateRefreshTokenAsync(UserId userId)
+    public async Task<LoginResult> RefreshTokensAsync(Guid refreshToken)
     {
-        await tokenRepository.RemoveRefreshTokenByUserIdAsync(userId);
+        return await transactionManager.ExecuteAsync(async () =>
+        {
+            var token = await tokenRepository.GetRefreshTokenByValueAsync(refreshToken);
+            if (token is null || token.IsExpired(TimeSpan.FromMinutes(_refreshTokenOptions.ExpireMinutes)))
+                throw new Exception("Invalid refresh token");
 
-        var refreshToken = await tokenRepository.AddRefreshTokenAsync(userId);
-        var expiresAt = refreshToken.CreatedAt.AddMinutes(_refreshTokenOptions.ExpireMinutes);
+            var user = await userRepository.GetUserByIdAsync(token.UserId);
+            if (user is null) throw new Exception("User not found");
 
-        return refreshToken.ToRefreshToken(expiresAt);
+            return new LoginResult
+            {
+                AccessToken = GenerateAccessToken(user),
+                RefreshToken = await GenerateRefreshTokenAsync(user.Id)
+            };
+        });
     }
 
     public async Task RevokeRefreshTokenAsync(UserId userId)
@@ -56,9 +65,10 @@ public class AuthService(
     // To be used by the many OAuth login methods
     private async Task<Domain.Account.User> GetOrAddUserAsync(string email, string username, string? avatar)
     {
-        var user = await userRepository.GetUserByEmailOrUsernameAsync(email, username);
+        var user = await userRepository.GetUserByEmailAsync(email);
         if (user != null) return user;
 
+        // move this to repository method and handle exceptions there instead of here in the service layer 
         if (user?.Email == email)
         {
             throw new Exception(email);
@@ -77,5 +87,15 @@ public class AuthService(
     private AccessToken GenerateAccessToken(Domain.Account.User user)
     {
         return jwtProvider.Generate(user);
+    }
+
+    private async Task<RefreshToken> GenerateRefreshTokenAsync(UserId userId)
+    {
+        await tokenRepository.RemoveRefreshTokenByUserIdAsync(userId);
+
+        var refreshToken = await tokenRepository.AddRefreshTokenAsync(userId);
+        var expiresAt = refreshToken.CreatedAt.AddMinutes(_refreshTokenOptions.ExpireMinutes);
+
+        return refreshToken.ToRefreshToken(expiresAt);
     }
 }
