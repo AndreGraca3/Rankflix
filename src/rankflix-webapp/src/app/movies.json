@@ -1,0 +1,124 @@
+{
+  "items": [
+    {
+      "releaseDate": "2024-09-20T00:00:00",
+      "overview": "Hired to cover up a high-profile crime, a fixer soon finds his night spiralling out of control when he's forced to work with an unexpected counterpart.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/vOX1Zng472PC2KnS0B9nRfM8aaZ.jpg",
+      "genres": ["Action", "Comedy", "Thriller"],
+      "externalRating": 6.471,
+      "id": 877817,
+      "title": "Wolfs",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-06-11T00:00:00",
+      "overview": "Teenager Riley's mind headquarters is undergoing a sudden demolition to make room for something entirely unexpected: new Emotions! Joy, Sadness, Anger, Fear and Disgust, who’ve long been running a successful operation by all accounts, aren’t sure how to feel when Anxiety shows up. And it looks like she’s not alone.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
+      "genres": ["Animation", "Family", "Adventure", "Comedy", "Drama"],
+      "externalRating": 7.644,
+      "id": 1022789,
+      "title": "Inside Out 2",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-08-07T00:00:00",
+      "overview": "When a woman's first love suddenly reenters her life, her relationship with a charming, but abusive neurosurgeon is upended, and she realizes she must learn to rely on her own strength to make an impossible choice for her future.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/cSMdFWmajaX4oUMLx7HEDI84GkP.jpg",
+      "genres": ["Romance", "Drama"],
+      "externalRating": 6.88,
+      "id": 1079091,
+      "title": "It Ends with Us",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-08-21T00:00:00",
+      "overview": "When tech billionaire Slater King meets cocktail waitress Frida at his fundraising gala, he invites her to join him and his friends on a dream vacation on his private island. But despite the epic setting, beautiful people, ever-flowing champagne, and late-night dance parties, Frida can sense that there’s something sinister hiding beneath the island’s lush façade.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/lZGOK0I2DJSRlEPNOAFTSNxSjDD.jpg",
+      "genres": ["Mystery", "Thriller"],
+      "externalRating": 6.663,
+      "id": 840705,
+      "title": "Blink Twice",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-07-24T00:00:00",
+      "overview": "A listless Wade Wilson toils away in civilian life with his days as the morally flexible mercenary, Deadpool, behind him. But when his homeworld faces an existential threat, Wade must reluctantly suit-up again with an even more reluctant Wolverine.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+      "genres": ["Action", "Comedy", "Science Fiction"],
+      "externalRating": 7.7,
+      "id": 533535,
+      "title": "Deadpool & Wolverine",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-06-20T00:00:00",
+      "overview": "Gru and Lucy and their girls—Margo, Edith and Agnes—welcome a new member to the Gru family, Gru Jr., who is intent on tormenting his dad. Gru also faces a new nemesis in Maxime Le Mal and his femme fatale girlfriend Valentina, forcing the family to go on the run.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/wWba3TaojhK7NdycRhoQpsG0FaH.jpg",
+      "genres": ["Animation", "Family", "Comedy", "Action"],
+      "externalRating": 7.16,
+      "id": 519182,
+      "title": "Despicable Me 4",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-09-25T00:00:00",
+      "overview": "An expat PI is hired to investigate a suspicious death in Crete, Greece, where jealousies run deep amongst the victim's powerful family.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/WiAEiqelck0NGWplhL5JQR12eg.jpg",
+      "genres": ["Crime", "Drama", "Romance"],
+      "externalRating": 6.2,
+      "id": 1108566,
+      "title": "Killer Heat",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-09-11T00:00:00",
+      "overview": "The untold origin story of Optimus Prime and Megatron, better known as sworn enemies, but once were friends bonded like brothers who changed the fate of Cybertron forever.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/qbkAqmmEIZfrCO8ZQAuIuVMlWoV.jpg",
+      "genres": ["Animation", "Science Fiction", "Adventure", "Family"],
+      "externalRating": 7.221,
+      "id": 698687,
+      "title": "Transformers One",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-09-07T00:00:00",
+      "overview": "A fading celebrity decides to use a black market drug, a cell-replicating substance that temporarily creates a younger, better version of herself.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/lqoMzCcZYEFK729d6qzt349fB4o.jpg",
+      "genres": ["Horror", "Comedy", "Drama"],
+      "externalRating": 7.177,
+      "id": 933260,
+      "title": "The Substance",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-10-01T00:00:00",
+      "overview": "While struggling with his dual identity, Arthur Fleck not only stumbles upon true love, but also finds the music that's always been inside him.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/byDXrm0pY6vSKIKyuKWK5vWz62G.jpg",
+      "genres": ["Drama", "Crime", "Thriller"],
+      "externalRating": 6,
+      "id": 889737,
+      "title": "Joker: Folie à Deux",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-09-12T00:00:00",
+      "overview": "After a shipwreck, an intelligent robot called Roz is stranded on an uninhabited island. To survive the harsh environment, Roz bonds with the island's animals and cares for an orphaned baby goose.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/hn4fOpFlbak5ruxkdrmdijs38Yl.jpg",
+      "genres": ["Animation", "Science Fiction", "Family"],
+      "externalRating": 7.555,
+      "id": 1184918,
+      "title": "The Wild Robot",
+      "type": "Movie"
+    },
+    {
+      "releaseDate": "2024-09-04T00:00:00",
+      "overview": "After a family tragedy, three generations of the Deetz family return home to Winter River. Still haunted by Betelgeuse, Lydia's life is turned upside down when her teenage daughter, Astrid, accidentally opens the portal to the Afterlife.",
+      "posterUrl": "https://image.tmdb.org/t/p/original/kKgQzkUCnQmeTPkyIwHly2t6ZFI.jpg",
+      "genres": ["Comedy", "Fantasy", "Horror"],
+      "externalRating": 7.2,
+      "id": 917496,
+      "title": "Beetlejuice Beetlejuice",
+      "type": "Movie"
+    }
+  ]
+}

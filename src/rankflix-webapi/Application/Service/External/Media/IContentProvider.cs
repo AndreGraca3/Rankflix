@@ -13,7 +13,7 @@ public interface IContentProvider
     
     public Task<PaginatedResult<TvShowItem>> GetTrendingTvShows(int page);
 
-    public Task<Movie> GetMovieById(int id);
+    public Task<Movie> GetMovieByTmdbId(int id);
     
-    public Task<TvShow> GetTvShowById(int id);
+    public Task<TvShow> GetTvShowByTmdbId(int id);
 }

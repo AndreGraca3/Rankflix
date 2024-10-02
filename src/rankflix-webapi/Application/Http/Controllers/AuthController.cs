@@ -26,7 +26,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         };
     }
 
-    [HttpPost(Uris.Auth.RefreshToken)]
+    [HttpGet(Uris.Auth.RefreshToken)]
     public async Task<ActionResult<LoginResponse>> RefreshTokens()
     {
         var oldRefreshToken = Request.Cookies[RefreshTokenCookieName];

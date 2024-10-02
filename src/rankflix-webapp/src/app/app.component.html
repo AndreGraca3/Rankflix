@@ -1,5 +1,7 @@
-<main class="main">
-  <div class="content">
-    <router-outlet />
-  </div>
-</main>
+<div class="wrap min-h-screen flex flex-col">
+  <app-navbar />
+  <main class="flex-grow p-10 mt-14 overflow-x-hidden items-center justify-center">
+   <router-outlet />
+  </main>
+  <app-footer />
+</div>

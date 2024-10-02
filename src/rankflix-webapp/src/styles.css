@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --primary-bg: rgba(12, 11, 17, 1);
-  --secondary-bg: rgba(255, 94, 58, 1);
+  --primary-bg: rgb(17, 12, 11);
+  --secondary-bg: rgb(227, 46, 6);
 }
 
 html {
   height: 100%;
   font-family: "Plus Jakarta Sans";
-  font-weight: bold;
+  scroll-padding: 70px;
 }
 
 body {
@@ -32,6 +32,10 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+#nprogress .bar {
+  background: var(--secondary-bg) !important;
+}
+
 *::-webkit-scrollbar {
   width: 8px;
 }
@@ -47,4 +51,13 @@ body {
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: #333;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
 }

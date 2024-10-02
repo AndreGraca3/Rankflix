@@ -134,7 +134,7 @@ public class TmdbContentProvider(TMDbClient client) : IContentProvider, IHostedS
         );
     }
 
-    public async Task<Movie> GetMovieById(int id)
+    public async Task<Movie> GetMovieByTmdbId(int id)
     {
         var movie = await client.GetMovieAsync(id);
 
@@ -153,7 +153,7 @@ public class TmdbContentProvider(TMDbClient client) : IContentProvider, IHostedS
         };
     }
 
-    public async Task<TvShow> GetTvShowById(int id)
+    public async Task<TvShow> GetTvShowByTmdbId(int id)
     {
         var tvShow = await client.GetTvShowAsync(id);
 

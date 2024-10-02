@@ -1,0 +1,11 @@
+<div>
+
+  
+  <app-selector />
+  
+  <div class="w-1/2 grid grid-cols-4 gap-6">
+    @for (mediaItem of mediaItems; track $index) {
+    <app-media-card [media]="mediaItem" />
+    }
+  </div>
+</div>

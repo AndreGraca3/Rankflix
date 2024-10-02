@@ -11,7 +11,7 @@ public static class Uris
         public const string Base = $"{ApiBase}/auth";
         public const string DiscordAuth = $"{Base}/discord-sign-in";
         public const string Logout = $"{Base}/sign-out";
-        public const string RefreshToken = $"{Base}/refresh-token";
+        public const string RefreshToken = $"{Base}/refresh";
     }
 
     public static class User
@@ -21,20 +21,29 @@ public static class Uris
         public const string Me = $"{Base}/me";
     }
 
-    public static class Movie
+    public static class Media
     {
-        public const string Base = $"{ApiBase}/movies";
-        public const string Search = $"{Base}/search";
-        public const string Trending = $"{Base}/trending";
-        public const string MovieByTmdbId = $"{Base}/{{tmdbId}}";
-    }
+        public const string MediaBase = $"{ApiBase}/media";
 
-    public static class Tv
-    {
-        public const string Base = $"{ApiBase}/tv";
-        public const string Search = $"{Base}/search";
-        public const string Trending = $"{Base}/trending";
-        public const string TvShowByTmdbId = $"{Base}/{{tmdbId}}";
+        public class Movies
+        {
+            public const string Base = MediaBase + "/movies";
+            public const string Search = Base + "/search";
+            public const string Trending = Base + "/trending";
+            public const string MovieByTmdbId = Base + "/{{tmdbId}}";
+
+            public static string BuildMovieByTmdbIdUri(int tmdbId) => MovieByTmdbId.ExpandUri(tmdbId);
+        }
+        
+        public class Tv
+        {
+            public const string Base = MediaBase + "/tv";
+            public const string Search = Base + "/search";
+            public const string Trending = Base + "/trending";
+            public const string TvByTmdbId = Base + "/{{tmdbId}}";
+
+            public static string BuildTvByTmdbIdUri(int tmdbId) => TvByTmdbId.ExpandUri(tmdbId);
+        }
     }
 
     public static class Review

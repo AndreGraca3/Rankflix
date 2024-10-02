@@ -1,0 +1,14 @@
+<header
+  class="bg-red-800 bg-opacity-20 z-30 fixed flex h-14 w-full px-6 items-center backdrop-blur-2xl shadow-2xl"
+>
+  <a routerLink="" class="hover:scale-110 transition-transform">
+    <img class="header-logo h-10 w-10" src="favicon.ico" alt="logo" />
+  </a>
+
+  <nav class="mx-10 space-x-8 hidden md:flex items-center">
+    <app-navbar-link link="/discover" text="Discover" />
+    <app-navbar-link link="/lists" text="Lists" />
+
+    <app-search-bar />
+  </nav>
+</header>

@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Rankflix.Infrastructure;
 
@@ -27,6 +29,9 @@ public static class Program
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseCors();
+        app.UseRateLimiter();
+
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -35,6 +40,24 @@ public static class Program
 
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
+        builder.Services.AddCors(o =>
+            o.AddDefaultPolicy(b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+
+        builder.Services.AddRateLimiter(rateLimiterOptions =>
+        {
+            rateLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            rateLimiterOptions.AddPolicy("fixed", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    httpContext.Connection.RemoteIpAddress?.ToString(),
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromSeconds(1)
+                    }
+                ));
+        });
+
         builder.Services
             .AddRankflixAuthentication(builder.Configuration)
             .AddControllers()
