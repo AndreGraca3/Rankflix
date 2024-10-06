@@ -1,7 +1,7 @@
 package pt.graca.infra;
 
 public class OSUtils {
-    public static String getAppDataPath() {
+    public static String getUserHomePath() {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {

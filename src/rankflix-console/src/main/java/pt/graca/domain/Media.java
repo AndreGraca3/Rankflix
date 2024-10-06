@@ -1,18 +1,17 @@
 package pt.graca.domain;
 
-import pt.graca.exceptions.RankflixException;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Media {
 
-    public Media(String imdbId, String title) {
-        this.imdbId = imdbId;
+    public Media(String tmdbId, String title) {
+        this.tmdbId = tmdbId;
         this.title = title;
     }
 
-    public String imdbId;
+    public String tmdbId;
     public String title;
 
     public float ratingSum = 0;
@@ -23,21 +22,22 @@ public class Media {
         return ratingSum / ratings.size();
     }
 
-    public void addRating(Rating rating) {
-        ratings.add(rating);
-        this.ratingSum += rating.value;
+    public Media addRating(Rating rating) {
+        var newMedia = new Media(this.tmdbId, this.title);
+        newMedia.ratingSum = this.ratingSum + rating.value;
+        return newMedia;
     }
 
-    public void deleteRating(String username) throws RankflixException.RatingTooOldException {
-        for (Rating rating : ratings) {
-            if (rating.username.equals(username)) {
-                if (rating.isTooOld()) {
-                    throw new RankflixException.RatingTooOldException();
-                }
-                ratings.remove(rating);
-                ratingSum -= rating.value;
-                return;
+    public Media removeRating(UUID userId) {
+        var newMedia = new Media(this.tmdbId, this.title);
+
+        for (Rating rating : this.ratings) {
+            if (rating.userId.equals(userId)) {
+                newMedia.ratings.remove(rating);
+                newMedia.ratingSum -= rating.value;
             }
         }
+
+        return newMedia;
     }
 }

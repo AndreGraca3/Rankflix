@@ -1,23 +1,30 @@
 package pt.graca.repo;
 
 import pt.graca.domain.Media;
+import pt.graca.domain.Rating;
 import pt.graca.domain.User;
-import pt.graca.exceptions.RankflixException;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface IRepository {
-    void createUser(String username) throws RankflixException.UserAlreadyExistsException;
+    String getListName();
 
-    User findUser(String username);
+    void insertUser(User user);
 
-    Media createMedia(String imdbId, String title) throws RankflixException.MediaAlreadyExistsException;
+    User findUserByUsername(String username);
+
+    User findUserById(UUID userId);
+
+    User findUserByDiscordId(String discordId);
+
+    void insertMedia(Media media);
 
     List<Media> getAllMedia();
 
-    Media findMedia(String mediaId);
+    Media findMediaByTmdbId(String mediaTmdbId);
 
-    void deleteMedia(String mediaId);
+    void updateMedia(Media media);
 
-    void deleteRating(Media media, String username) throws RankflixException.RatingTooOldException;
+    void deleteMedia(Media media);
 }

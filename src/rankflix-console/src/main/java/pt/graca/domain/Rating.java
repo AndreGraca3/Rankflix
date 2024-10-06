@@ -1,37 +1,36 @@
 package pt.graca.domain;
 
-import pt.graca.exceptions.RankflixException;
+import pt.graca.service.exceptions.InvalidRatingException;
+import pt.graca.service.exceptions.RatingTooOldException;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class Rating {
-
-    public Rating(String username, float rating) throws RankflixException.InvalidRatingException {
+    public Rating(UUID userId, float rating) throws InvalidRatingException {
         validateRating(rating);
-        this.username = username;
+        this.userId = userId;
         this.value = rating;
     }
 
-    public String username;
+    public UUID userId;
     public float value;
     public Instant createdAt = Instant.now();
 
-    private void validateRating(float rating) throws RankflixException.InvalidRatingException {
+    private void validateRating(float rating) throws InvalidRatingException {
         if (rating < 0 || rating > 10) {
-            throw new RankflixException.InvalidRatingException(rating + "");
+            throw new InvalidRatingException(rating + "");
         }
     }
 
-    public void updateRating(float rating) throws RankflixException {
+    public Rating updateRating(float rating) throws RatingTooOldException, InvalidRatingException {
         validateRating(rating);
-        if (isTooOld()) {
-            throw new RankflixException.RatingTooOldException();
-        }
-        this.value = rating;
-        this.createdAt = Instant.now();
+        if (isTooOld(60 * 5)) throw new RatingTooOldException();
+
+        return new Rating(this.userId, rating);
     }
 
-    public boolean isTooOld() {
-        return Instant.now().getEpochSecond() - createdAt.getEpochSecond() > 5 * 60;
+    public boolean isTooOld(int seconds) {
+        return Instant.now().getEpochSecond() - createdAt.getEpochSecond() > seconds;
     }
 }

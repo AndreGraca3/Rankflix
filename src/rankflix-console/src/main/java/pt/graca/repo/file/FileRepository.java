@@ -2,80 +2,49 @@ package pt.graca.repo.file;
 
 import com.google.gson.Gson;
 import pt.graca.domain.Media;
-import pt.graca.domain.RankflixData;
-import pt.graca.domain.Rating;
+import pt.graca.domain.RankflixList;
 import pt.graca.domain.User;
-import pt.graca.exceptions.RankflixException;
 import pt.graca.repo.IRepository;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-
-import static pt.graca.infra.OSUtils.getAppDataPath;
+import java.util.UUID;
 
 public class FileRepository implements IRepository {
 
-    public FileRepository(Gson gson) throws IOException {
-        File file = new File(getAppDataPath() + "/rankflix.json");
+    public FileRepository(Gson gson, String folderName, String listName) throws IOException {
+        this.gson = gson;
+        this.fileLocation = folderName.concat(File.separator).concat(listName).concat(".json");
 
+        File file = new File(fileLocation);
         if (!file.exists() || file.length() == 0) {
-            rankflixData = new RankflixData();
-            Files.write(file.toPath(), gson.toJson(rankflixData).getBytes());
+            rankflixList = new RankflixList(listName);
+            Files.write(file.toPath(), gson.toJson(rankflixList).getBytes());
             return;
         }
 
-        String json = new String(Files.readAllBytes(file.toPath()));
-        rankflixData = gson.fromJson(json, RankflixData.class);
-
-        this.gson = gson;
-
-        System.out.println("Loaded data created on " + rankflixData.creationDate);
+        rankflixList = gson.fromJson(Files.readString(file.toPath()), RankflixList.class);
+        System.out.println("Loaded data created at " + rankflixList.creationDate);
     }
 
-    private Gson gson;
-    private final RankflixData rankflixData;
+    private final String fileLocation;
+    private final Gson gson;
+    private final RankflixList rankflixList;
 
-    public void createUser(String username) throws RankflixException.UserAlreadyExistsException {
-        if (findUser(username) != null) {
-            throw new RankflixException.UserAlreadyExistsException(username);
-        }
-        rankflixData.users.add(new User(username));
+    @Override
+    public String getListName() {
+        return rankflixList.listName;
     }
 
-    public Media createMedia(String imdbId, String title) throws RankflixException.MediaAlreadyExistsException {
-        if (findMedia(imdbId) != null) {
-            throw new RankflixException.MediaAlreadyExistsException(imdbId);
-        }
-        Media media = new Media(imdbId, title);
-        rankflixData.media.add(media);
-        return media;
-    }
-
-    public List<Media> getAllMedia() {
-        return rankflixData.media;
-    }
-
-    public Media findMedia(String movie) {
-        for (Media media : rankflixData.media) {
-            if (media.imdbId.equals(movie)) {
-                return media;
-            }
-        }
-        return null;
+    public void insertUser(User user) {
+        rankflixList.users.add(user);
     }
 
     @Override
-    public void deleteMedia(String mediaId) {
-        Media media = findMedia(mediaId);
-        if (media != null) {
-            rankflixData.media.remove(media);
-        }
-    }
-
-    public User findUser(String username) {
-        for (User user : rankflixData.users) {
+    public User findUserByUsername(String username) {
+        for (User user : rankflixList.users) {
             if (user.username.equals(username)) {
                 return user;
             }
@@ -83,35 +52,60 @@ public class FileRepository implements IRepository {
         return null;
     }
 
-    public Rating addRating(User user, Media media, float userRating) throws IOException, RankflixException.InvalidRatingException {
-        Rating rating = new Rating(user.username, userRating);
-        media.ratings.add(rating);
-        return rating;
-    }
-
-    public Rating findRating(Media media, String username) {
-        for (Rating rating : media.ratings) {
-            if (rating.username.equals(username)) {
-                return rating;
+    @Override
+    public User findUserById(UUID userId) {
+        for (User user : rankflixList.users) {
+            if (user.userId.equals(userId)) {
+                return user;
             }
         }
         return null;
     }
 
-    public void deleteRating(Media media, String username) throws RankflixException.RatingTooOldException {
-        for (Rating rating : media.ratings) {
-            if (rating.username.equals(username)) {
-                if (rating.isTooOld()) {
-                    throw new RankflixException.RatingTooOldException();
-                }
-                media.ratings.remove(rating);
+    @Override
+    public User findUserByDiscordId(String discordId) {
+        for (User user : rankflixList.users) {
+            if (user.discordId.equals(discordId)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public void insertMedia(Media media) {
+        rankflixList.media.add(media);
+    }
+
+    public List<Media> getAllMedia() {
+        return rankflixList.media;
+    }
+
+    public Media findMediaByTmdbId(String mediaTmdbId) {
+        for (Media media : rankflixList.media) {
+            if (media.tmdbId.equals(mediaTmdbId)) {
+                return media;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void updateMedia(Media media) {
+        for (int i = 0; i < rankflixList.media.size(); i++) {
+            if (rankflixList.media.get(i).tmdbId.equals(media.tmdbId)) {
+                rankflixList.media.set(i, media);
                 return;
             }
         }
     }
 
+    @Override
+    public void deleteMedia(Media media) {
+        rankflixList.media.remove(media);
+    }
+
     public void saveData() throws IOException {
-        String json = gson.toJson(rankflixData);
-        Files.write(new File(getAppDataPath() + "/rankflix.json").toPath(), json.getBytes());
+        String json = gson.toJson(rankflixList);
+        Files.write(new File(fileLocation).toPath(), json.getBytes());
     }
 }

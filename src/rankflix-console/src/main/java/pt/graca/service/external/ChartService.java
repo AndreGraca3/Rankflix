@@ -1,4 +1,4 @@
-package pt.graca.service;
+package pt.graca.service.external;
 
 import com.google.gson.Gson;
 import io.quickchart.QuickChart;
@@ -20,22 +20,22 @@ public class ChartService {
 
         List<String> titles = new ArrayList<>();
         List<Float> ratings = new ArrayList<>();
-        media.forEach(m -> {
-            titles.add(m.title);
+        for (int i = 0; i < media.size(); i++) {
+            Media m = media.get(i);
+            titles.add(i + 1 + "º " + m.title);
             ratings.add(m.getRating());
-        });
+        }
 
         ChartConfig config = new ChartConfig(
                 "horizontalBar",
-                new Data(
-                        titles,
-                        List.of(new Dataset(ratings))
-                )
+                new Data(titles, List.of(new Dataset(ratings)))
         );
 
         chart.setBackgroundColor("white");
+        chart.setWidth(1920);
+        chart.setHeight(1080);
         chart.setConfig(gson.toJson(config));
-        return chart.getUrl();
+        return chart.getShortUrl();
     }
 }
 
@@ -60,9 +60,11 @@ record ChartOptions(ScaleOptions scales, LegendOptions legend, TitleOptions titl
     }
 }
 
-record ScaleOptions(List<Axis> xAxes) {
+record ScaleOptions(List<Axis> xAxes, List<Axis> yAxes) {
     public ScaleOptions() {
-        this(List.of(new Axis()));
+        this(List.of(new Axis(
+                new Ticks(0, 10F, 0)
+        )), List.of(new Axis(new Ticks(0, null, 1))));
     }
 }
 
@@ -79,13 +81,10 @@ record TitleOptions(String text, boolean display) {
 }
 
 record Axis(Ticks ticks) {
-    public Axis() {
-        this(new Ticks());
-    }
 }
 
-record Ticks(float min, float max) {
-    public Ticks() {
-        this(0, 10);
+record Ticks(float min, Float max, float stepSize, boolean autoSkip) {
+    public Ticks(float min, Float max, float stepSize) {
+        this(min, max, stepSize, false);
     }
 }
