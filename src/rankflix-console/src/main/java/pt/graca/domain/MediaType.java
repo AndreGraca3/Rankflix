@@ -21,7 +21,7 @@ public enum MediaType {
 
     @Override
     public String toString() {
-        return this.type;
+        return this.type.toUpperCase();
     }
 }
 

@@ -1,11 +1,12 @@
-package pt.graca.service.external.discord.bot.commands;
+package pt.graca.discord.bot.command.media;
 
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.domain.MediaType;
+import pt.graca.discord.bot.command.Consts.MEDIA_TMDB_ID_OPTION;
+import pt.graca.discord.bot.command.ICommand;
 import pt.graca.service.RankflixService;
 
 import java.awt.*;
@@ -33,15 +34,16 @@ public class DeleteMediaCommand implements ICommand {
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.STRING, "tmdb_id", "The TMDB ID of the media", true));
+        options.add(new OptionData(OptionType.INTEGER,
+                MEDIA_TMDB_ID_OPTION.NAME, MEDIA_TMDB_ID_OPTION.DESCRIPTION, true));
         return options;
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        String mediaTmdbId = event.getOption("tmdb_id").getAsString();
-        service.deleteMedia(mediaTmdbId);
-        event.replyEmbeds(new EmbedBuilder()
+        int mediaTmdbId = event.getOption(MEDIA_TMDB_ID_OPTION.NAME).getAsInt();
+        service.removeMediaFromRanking(mediaTmdbId);
+        event.getHook().sendMessageEmbeds(new EmbedBuilder()
                 .setTitle("Media deleted")
                 .setColor(Color.GRAY)
                 .build()

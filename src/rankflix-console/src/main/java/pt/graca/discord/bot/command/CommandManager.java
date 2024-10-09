@@ -1,10 +1,11 @@
-package pt.graca.service.external.discord.bot.commands;
+package pt.graca.discord.bot.command;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -18,11 +19,13 @@ public class CommandManager extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         for (Guild guild : event.getJDA().getGuilds()) {
-            for (ICommand command : commands) {
-                guild.upsertCommand(command.getName(), command.getDescription())
-                        .addOptions(command.getOptions()).queue();
-            }
+            guild.updateCommands()
+                    .addCommands(commands.stream().map(cmd ->
+                            Commands.slash(cmd.getName(), cmd.getDescription())
+                                    .addOptions(cmd.getOptions())).toList())
+                    .queue();
         }
+        System.out.println("Bot is running!");
     }
 
     @Override
@@ -30,9 +33,12 @@ public class CommandManager extends ListenerAdapter {
         for (ICommand command : commands) {
             if (command.getName().equals(event.getName())) {
                 try {
+                    event.deferReply().queue();
                     command.execute(event);
+                    break;
                 } catch (Exception e) {
-                    event.replyEmbeds(new EmbedBuilder()
+                    e.printStackTrace();
+                    event.getHook().sendMessageEmbeds(new EmbedBuilder()
                             .setTitle("Error")
                             .setDescription(e.getMessage())
                             .setColor(Color.RED)

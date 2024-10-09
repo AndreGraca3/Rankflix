@@ -8,9 +8,10 @@ import pt.graca.menu.RankflixMenuService;
 import pt.graca.repo.file.FileRepository;
 import pt.graca.repo.file.FileRepositoryTransaction;
 import pt.graca.repo.file.FileTransactionManager;
+import pt.graca.service.external.ChartService;
 import pt.graca.service.external.content.TmdbProvider;
-import pt.graca.service.external.discord.bot.DiscordBotService;
-import pt.graca.service.external.discord.DiscordWebhookService;
+import pt.graca.discord.bot.DiscordBotService;
+import pt.graca.discord.DiscordWebhookService;
 import pt.graca.service.external.PastebinService;
 import pt.graca.service.RankflixService;
 
@@ -28,7 +29,8 @@ public class Main {
         System.out.println("-".repeat(50));
 
         MainMenuService mainMenuService = getMainMenuService();
-        mainMenuService.show();
+        // mainMenuService.show();
+        mainMenuService.startDiscordBot();
     }
 
     private static MainMenuService getMainMenuService() throws IOException {
@@ -64,10 +66,14 @@ public class Main {
         TmdbProvider contentProvider = new TmdbProvider();
         RankflixService service = new RankflixService(trManager, contentProvider);
 
+        // external services
         PastebinService pastebinService = new PastebinService();
+        ChartService chartService = new ChartService(gson);
+
+        // discord
         var discordWebhookUrl = System.getenv("RANKFLIX_DISCORD_WEBHOOK_URL");
         DiscordWebhookService discordWebhookService = new DiscordWebhookService(discordWebhookUrl);
-        DiscordBotService discordBotService = new DiscordBotService(service);
+        DiscordBotService discordBotService = new DiscordBotService(service, chartService);
 
         // menu
         RankflixMenuService rankflixMenuService = new RankflixMenuService(scanner, service, pastebinService, discordWebhookService);

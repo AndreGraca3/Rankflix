@@ -1,9 +1,12 @@
 package pt.graca.service.external.content;
 
-import pt.graca.service.results.MediaResult;
+import pt.graca.service.results.MediaDetailsItem;
+import pt.graca.service.results.MediaDetails;
+
+import java.util.List;
 
 public interface IContentProvider {
-    MediaResult getMovieDetails(String tmdbId);
+    MediaDetails getMediaDetails(int id);
 
-    MediaResult getTvShowDetails(String tmdbId);
+    List<MediaDetailsItem> searchMedia(String query, int page);
 }

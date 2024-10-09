@@ -1,8 +1,10 @@
 package pt.graca.repo.file;
 
 import com.google.gson.Gson;
+import org.jetbrains.annotations.Nullable;
 import pt.graca.domain.Media;
 import pt.graca.domain.RankflixList;
+import pt.graca.domain.Rating;
 import pt.graca.domain.User;
 import pt.graca.repo.IRepository;
 
@@ -55,7 +57,7 @@ public class FileRepository implements IRepository {
     @Override
     public User findUserById(UUID userId) {
         for (User user : rankflixList.users) {
-            if (user.userId.equals(userId)) {
+            if (user.id.equals(userId)) {
                 return user;
             }
         }
@@ -76,13 +78,15 @@ public class FileRepository implements IRepository {
         rankflixList.media.add(media);
     }
 
-    public List<Media> getAllMedia() {
-        return rankflixList.media;
+    public List<Media> getAllMedia(@Nullable String query) {
+        return rankflixList.media.stream()
+                .filter(media -> query == null || media.title.toLowerCase().contains(query.toLowerCase()))
+                .toList();
     }
 
-    public Media findMediaByTmdbId(String mediaTmdbId) {
+    public Media findMediaByTmdbId(int mediaTmdbId) {
         for (Media media : rankflixList.media) {
-            if (media.tmdbId.equals(mediaTmdbId)) {
+            if (media.tmdbId == mediaTmdbId) {
                 return media;
             }
         }
@@ -92,7 +96,7 @@ public class FileRepository implements IRepository {
     @Override
     public void updateMedia(Media media) {
         for (int i = 0; i < rankflixList.media.size(); i++) {
-            if (rankflixList.media.get(i).tmdbId.equals(media.tmdbId)) {
+            if (rankflixList.media.get(i).tmdbId == media.tmdbId) {
                 rankflixList.media.set(i, media);
                 return;
             }
@@ -102,6 +106,20 @@ public class FileRepository implements IRepository {
     @Override
     public void deleteMedia(Media media) {
         rankflixList.media.remove(media);
+    }
+
+    @Override
+    public Rating findRating(int mediaTmdbId, UUID userId) {
+        var media = findMediaByTmdbId(mediaTmdbId);
+        if (media == null) return null;
+
+        for (Rating rating : media.ratings) {
+            if (rating.userId.equals(userId)) {
+                return rating;
+            }
+        }
+
+        return null;
     }
 
     public void saveData() throws IOException {

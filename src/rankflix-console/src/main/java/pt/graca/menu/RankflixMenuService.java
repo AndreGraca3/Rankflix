@@ -4,8 +4,7 @@ import pt.graca.domain.Media;
 import pt.graca.domain.User;
 import pt.graca.service.RankflixService;
 import pt.graca.service.exceptions.InvalidRatingException;
-import pt.graca.service.exceptions.MediaNotFoundException;
-import pt.graca.service.external.discord.DiscordWebhookService;
+import pt.graca.discord.DiscordWebhookService;
 import pt.graca.service.external.PastebinService;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public class RankflixMenuService extends Menu {
     @MenuOption("Create a new user")
     public void createUser() throws Exception {
         String username = read("Enter the username:");
-        service.createUser(username);
+        service.createUser(username, null);
     }
 
     @MenuOption("Add rating")
@@ -36,11 +35,11 @@ public class RankflixMenuService extends Menu {
         String username = read("Enter the username: ");
         User user = service.findUserByUsername(username);
 
-        String mediaId = read("Enter the media's TMDB id: ");
+        String mediaTmdbId = read("Enter the media's TMDB id: ");
 
         String rating = read("Enter the rating: ");
         try {
-            service.addRating(user, mediaId, Float.parseFloat(rating));
+            service.addRating(user.id, Integer.parseInt(mediaTmdbId), Float.parseFloat(rating), null);
         } catch (NumberFormatException e) {
             throw new InvalidRatingException(rating);
         }
@@ -51,19 +50,15 @@ public class RankflixMenuService extends Menu {
         String username = read("Enter the username: ");
         User user = service.findUserByUsername(username);
 
-        String mediaTmdbId = read("Enter the media's TMDB id: ");
-        service.findMediaByTmdbId(mediaTmdbId);
+        int mediaTmdbId = Integer.parseInt(read("Enter the media's TMDB id: "));
+        service.findRankedMediaByTmdbId(mediaTmdbId);
 
-        service.deleteRating(mediaTmdbId, user.userId);
+        service.deleteRating(mediaTmdbId, user.id);
     }
 
-    @MenuOption("Send ranking to Discord channel")
+    @MenuOption("Send ranking to Discord webhook")
     public void sendToDiscord() throws Exception {
-        List<Media> media = service.getAllMedia();
-
-        // make a ranking based on the average rating
-        media.sort((o1, o2) ->
-                Float.compare(o2.ratingSum / o2.ratings.size(), o1.ratingSum / o1.ratings.size()));
+        List<Media> media = service.getTopRankedMedia(null);
 
         // var chartUrl = chartService.generateRankingChart(media);
         var pasteUrl = pastebinService.createPaste(media);

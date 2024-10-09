@@ -1,4 +1,4 @@
-package pt.graca.service.external.discord;
+package pt.graca.discord;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

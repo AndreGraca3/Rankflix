@@ -1,5 +1,6 @@
 package pt.graca.repo;
 
+import org.jetbrains.annotations.Nullable;
 import pt.graca.domain.Media;
 import pt.graca.domain.Rating;
 import pt.graca.domain.User;
@@ -20,11 +21,13 @@ public interface IRepository {
 
     void insertMedia(Media media);
 
-    List<Media> getAllMedia();
+    List<Media> getAllMedia(@Nullable String query);
 
-    Media findMediaByTmdbId(String mediaTmdbId);
+    Media findMediaByTmdbId(int mediaTmdbId);
 
     void updateMedia(Media media);
 
     void deleteMedia(Media media);
+
+    Rating findRating(int mediaTmdbId, UUID userId);
 }
