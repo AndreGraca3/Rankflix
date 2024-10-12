@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
+import pt.graca.api.service.exceptions.RankflixException;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -18,14 +19,19 @@ public class CommandManager extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        for (Guild guild : event.getJDA().getGuilds()) {
-            guild.updateCommands()
-                    .addCommands(commands.stream().map(cmd ->
-                            Commands.slash(cmd.getName(), cmd.getDescription())
-                                    .addOptions(cmd.getOptions())).toList())
-                    .queue();
+        try {
+            for (Guild guild : event.getJDA().getGuilds()) {
+                guild.updateCommands()
+                        .addCommands(commands.stream().map(cmd ->
+                                Commands.slash(cmd.getName(), cmd.getDescription())
+                                        .addOptions(cmd.getOptions())).toList()
+                        ).queue();
+            }
+            System.out.println("Bot is running!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            event.getJDA().shutdown();
         }
-        System.out.println("Bot is running!");
     }
 
     @Override
@@ -37,13 +43,15 @@ public class CommandManager extends ListenerAdapter {
                     command.execute(event);
                     break;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    if (!(e instanceof RankflixException)) e.printStackTrace();
                     event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setTitle("Error")
-                            .setDescription(e.getMessage())
-                            .setColor(Color.RED)
-                            .build()
-                    ).queue();
+                                    .setTitle("Error")
+                                    .setDescription(e.getMessage() != null ? e.getMessage() : "Internal error")
+                                    .setColor(Color.RED)
+                                    .build()
+                            )
+                            .setEphemeral(true)
+                            .queue();
                 }
             }
         }

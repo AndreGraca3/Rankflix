@@ -1,21 +1,23 @@
-package pt.graca.discord.bot.command.media;
-
+package pt.graca.discord.bot.command.review;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;
-import pt.graca.discord.bot.command.ICommand;
+import pt.graca.api.domain.User;
 import pt.graca.api.service.RankflixService;
+import pt.graca.api.service.exceptions.user.UserNotFoundException;
+import pt.graca.discord.bot.command.ICommand;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeleteMediaCommand implements ICommand {
+import static pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;
 
-    public DeleteMediaCommand(RankflixService service) {
+public class DeleteReviewCommand implements ICommand {
+
+    public DeleteReviewCommand(RankflixService service) {
         this.service = service;
     }
 
@@ -23,12 +25,12 @@ public class DeleteMediaCommand implements ICommand {
 
     @Override
     public String getName() {
-        return "delete-media";
+        return "delete-review";
     }
 
     @Override
     public String getDescription() {
-        return "Deletes media from the list";
+        return "Delete a review for a movie or tv show";
     }
 
     @Override
@@ -41,13 +43,18 @@ public class DeleteMediaCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId
-                = event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
+        int mediaTmdbId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // This is movieId as value labeled as name
 
-        service.removeMediaFromRanking(mediaTmdbId);
+        var discordUser = event.getUser();
+        User user = service.findUserByDiscordId(discordUser.getId());
+        if (user == null) {
+            throw new UserNotFoundException(discordUser.getId());
+        }
+
+        service.deleteRating(mediaTmdbId, user.id);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                .setTitle("Media deleted")
+                .setAuthor("| Rating deleted", null, discordUser.getAvatarUrl())
                 .setColor(Color.GRAY)
                 .build()
         ).queue();

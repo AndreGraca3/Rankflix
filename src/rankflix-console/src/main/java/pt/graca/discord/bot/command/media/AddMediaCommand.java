@@ -5,9 +5,9 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu;
-import pt.graca.domain.MediaType;
-import pt.graca.service.RankflixService;
-import pt.graca.service.results.MediaDetails;
+import pt.graca.api.domain.MediaType;
+import pt.graca.api.service.RankflixService;
+import pt.graca.api.service.results.MediaDetails;
 
 import java.awt.*;
 
@@ -60,6 +60,8 @@ public abstract class AddMediaCommand {
                         .setDescription("Allow users to rate this media")
                         .setColor(Color.MAGENTA)
                         .build())
-                .addActionRow(selectMenu).queue();
+                .addActionRow(selectMenu)
+                .setEphemeral(true)
+                .queue();
     }
 }

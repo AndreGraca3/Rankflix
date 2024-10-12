@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import pt.graca.discord.bot.command.Consts.MEDIA_TMDB_ID_OPTION;
 import pt.graca.discord.bot.command.ICommand;
-import pt.graca.service.RankflixService;
+import pt.graca.api.service.RankflixService;
 
 import java.util.ArrayList;
 import java.util.List;
