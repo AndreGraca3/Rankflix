@@ -1,4 +1,4 @@
-package pt.graca.infra;
+package pt.graca.infra.gson;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;

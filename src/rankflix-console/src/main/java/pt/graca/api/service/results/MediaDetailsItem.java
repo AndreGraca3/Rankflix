@@ -1,7 +1,7 @@
 package pt.graca.api.service.results;
 
 import org.jetbrains.annotations.Nullable;
-import pt.graca.api.domain.MediaType;
+import pt.graca.api.domain.media.MediaType;
 
 import java.time.LocalDate;
 

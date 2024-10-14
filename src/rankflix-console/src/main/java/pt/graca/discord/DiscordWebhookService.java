@@ -2,7 +2,7 @@ package pt.graca.discord;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import pt.graca.infra.GsonInstantTypeAdapter;
+import pt.graca.infra.gson.GsonInstantTypeAdapter;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;

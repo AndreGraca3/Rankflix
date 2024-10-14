@@ -7,9 +7,9 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import pt.graca.Utils;
 import pt.graca.discord.bot.command.Consts;
 import pt.graca.discord.bot.command.ICommand;
-import pt.graca.api.domain.Media;
+import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.Review;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
 import pt.graca.api.service.exceptions.user.UserNotFoundException;
@@ -56,7 +56,7 @@ public class CheckReviewCommand implements ICommand {
         User user = service.findUserByDiscordId(discordUser.getId());
         if (user == null) throw new UserNotFoundException(discordUser.getId());
 
-        Review review = service.findRating(mediaTmdbId, user.id);
+        Review review = service.findReview(mediaTmdbId, user.id);
         if (review == null) throw new ReviewNotFoundException(mediaTmdbId);
 
         Media media = service.findRankedMediaByTmdbId(mediaTmdbId);
@@ -66,7 +66,7 @@ public class CheckReviewCommand implements ICommand {
                         null, discordUser.getAvatarUrl())
                 .setDescription(review.comment)
                 .setColor(Color.ORANGE)
-                .addField("Rating", String.valueOf(review.value), true)
+                .addField("Rating", String.valueOf(review.rating), true)
                 .addField("Rated At", Utils.instantToString(review.createdAt), true)
                 .build()
         ).queue();

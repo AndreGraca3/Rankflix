@@ -33,10 +33,12 @@ public class MediaQueryAutoComplete implements IAutoComplete {
                         .map(m -> new Command.Choice(
                                 String.format("%s • %s (%s)",
                                         m.type(),
-                                        m.title(),
+                                        m.title().length() > 50 ? m.title().substring(0, 50) + "..." : m.title(),
                                         (m.releaseDate() != null ? m.releaseDate().getYear() : "Some year")),
                                 m.tmdbId()
-                        )).toList()
+                        ))
+                        .limit(25)
+                        .toList()
         ).queue();
     }
 }

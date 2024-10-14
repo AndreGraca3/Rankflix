@@ -1,4 +1,7 @@
-package pt.graca.api.domain;
+package pt.graca.api.repo.file.dto;
+
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.user.User;
 
 import java.time.Instant;
 import java.util.ArrayList;

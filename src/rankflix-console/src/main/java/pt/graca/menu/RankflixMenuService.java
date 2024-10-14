@@ -1,29 +1,25 @@
 package pt.graca.menu;
 
-import pt.graca.api.domain.Media;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.Review;
+import pt.graca.api.domain.media.MediaWatcher;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.review.InvalidRatingException;
-import pt.graca.discord.DiscordWebhookService;
-import pt.graca.infra.generator.IRankGenerator;
+import pt.graca.infra.excel.ExcelMedia;
+import pt.graca.infra.excel.ExcelRating;
+import pt.graca.infra.excel.ExcelService;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 public class RankflixMenuService extends ConsoleMenu {
 
-    public RankflixMenuService(Scanner scanner, RankflixService service, IRankGenerator rankGenerator) {
+    public RankflixMenuService(Scanner scanner, RankflixService service) {
         super(scanner);
 
         this.service = service;
-        this.rankGenerator = rankGenerator;
     }
 
     private final RankflixService service;
-    private final IRankGenerator rankGenerator;
-    private final DiscordWebhookService discordWebhookService
-            = new DiscordWebhookService(System.getenv("RANKFLIX_DISCORD_WEBHOOK_URL"));
 
     @ConsoleMenuOption("Create a new user")
     public void createUser() throws Exception {
@@ -57,11 +53,34 @@ public class RankflixMenuService extends ConsoleMenu {
         service.deleteRating(mediaTmdbId, user.id);
     }
 
-    @ConsoleMenuOption("Send ranking to Discord webhook")
-    public void sendToDiscord() throws Exception {
-        List<Media> media = service.getTopRankedMedia(null);
+    @ConsoleMenuOption("Import from Excel (overrides everything)")
+    public void importFromExcel() throws Exception {
+        String path = read("Enter the path to the Excel file: ");
 
-        var generatedRankUrl = rankGenerator.generateRankUrl(media);
-        discordWebhookService.sendMessage(generatedRankUrl);
+        List<ExcelMedia> importedMedia = ExcelService.importMedia(path.replace("\"", ""));
+        service.clearAll();
+
+        Map<String, User> usersMap = new HashMap<>();
+        for (ExcelMedia media : importedMedia) {
+            System.out.println("Adding media: " + media.title());
+
+            List<MediaWatcher> watchers = new ArrayList<>();
+
+            for (ExcelRating rating : media.ratings()) {
+                var user = usersMap.computeIfAbsent(rating.user().username(), k -> {
+                    try {
+                        System.out.println("Adding user: " + rating.user().username());
+                        return service.createDiscordUser(
+                                rating.user().discordId(), rating.user().username(), null);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                watchers.add(new MediaWatcher(user.id, new Review(rating.rating(), null)));
+            }
+
+            service.addMediaWithWatchers(media.tmdbId(), watchers);
+        }
     }
 }

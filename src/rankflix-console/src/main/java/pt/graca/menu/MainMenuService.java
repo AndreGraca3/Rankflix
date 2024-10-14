@@ -1,10 +1,10 @@
 package pt.graca.menu;
 
 import pt.graca.discord.bot.DiscordBotService;
-import pt.graca.api.repo.factory.RepositoryFactory;
+import pt.graca.api.repo.factory.TransactionManagerFactory;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.external.content.IContentProvider;
-import pt.graca.infra.generator.IRankGenerator;
+import pt.graca.infra.generator.factory.RankGeneratorFactory;
 
 import java.util.Scanner;
 
@@ -12,34 +12,35 @@ public class MainMenuService extends ConsoleMenu {
 
     public MainMenuService(
             Scanner scanner,
-            RepositoryFactory repositoryFactory,
+            TransactionManagerFactory transactionManagerFactory,
             IContentProvider contentProvider,
-            IRankGenerator rankGenerator
+            RankGeneratorFactory rankGeneratorFactory
     ) {
         super(scanner);
 
-        this.repositoryFactory = repositoryFactory;
+        this.transactionManagerFactory = transactionManagerFactory;
         this.contentProvider = contentProvider;
-        this.rankGenerator = rankGenerator;
+        this.rankGeneratorFactory = rankGeneratorFactory;
     }
 
-    private final RepositoryFactory repositoryFactory;
+    private final TransactionManagerFactory transactionManagerFactory;
     private final IContentProvider contentProvider;
-    private final IRankGenerator rankGenerator;
+    private final RankGeneratorFactory rankGeneratorFactory;
 
     private RankflixMenuService rankflixMenuService;
     private DiscordBotService discordBotService;
 
-    @ConsoleMenuOption(value = "Start discord bot service (recommended)", priority = true)
+    @ConsoleMenuOption(value = "Start discord bot service", priority = true)
     public void startDiscordBot() {
         discordBotService.start();
+        System.out.println("Press enter to stop the bot");
+        scanner.nextLine();
+        discordBotService.stop();
     }
 
-    @ConsoleMenuOption("Start menu service (legacy)")
+    @ConsoleMenuOption("Admin menu")
     public void printRankflixMenuForever() {
-        while (true) {
-            rankflixMenuService.show();
-        }
+        rankflixMenuService.showForever();
     }
 
     /**
@@ -47,11 +48,11 @@ public class MainMenuService extends ConsoleMenu {
      */
     public void chooseList() {
         var rankflixService =
-                new RankflixService(repositoryFactory.createTransactionManager(), contentProvider);
+                new RankflixService(transactionManagerFactory.createTransactionManager(), contentProvider);
 
         // initialize user services with created RankflixService
         // with the appropriate repository with new listName
-        rankflixMenuService = new RankflixMenuService(scanner, rankflixService, rankGenerator);
-        discordBotService = new DiscordBotService(rankflixService, rankGenerator);
+        rankflixMenuService = new RankflixMenuService(scanner, rankflixService);
+        discordBotService = new DiscordBotService(rankflixService, rankGeneratorFactory);
     }
 }

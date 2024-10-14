@@ -1,4 +1,4 @@
-package pt.graca.api.domain;
+package pt.graca.api.domain.media;
 
 public enum MediaType {
     MOVIE("movie"),

@@ -1,29 +1,32 @@
-package pt.graca.infra.generator;
+package pt.graca.infra.generator.core;
 
 import com.google.gson.Gson;
 import io.quickchart.QuickChart;
-import pt.graca.api.domain.Media;
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.rank.RankedMedia;
+import pt.graca.api.domain.rank.RatedMedia;
+import pt.graca.infra.generator.RankGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChartService implements IRankGenerator {
+public class ChartGenerator extends RankGenerator {
 
-    public ChartService(Gson gson) {
+    public ChartGenerator(Gson gson) {
         this.gson = gson;
     }
 
     private final Gson gson;
 
-    public String generateRankUrl(List<Media> media) {
+    public String generateRankUrl(RankedMedia media, String title) {
         QuickChart chart = new QuickChart();
 
         List<String> titles = new ArrayList<>();
         List<Float> ratings = new ArrayList<>();
-        for (int i = 0; i < media.size(); i++) {
-            Media m = media.get(i);
-            titles.add(i + 1 + "º " + m.title);
-            ratings.add(m.getRating());
+        for (int i = 0; i < media.rankedMedia().size(); i++) {
+            RatedMedia m = media.rankedMedia().get(i);
+            titles.add(i + 1 + "º " + m.title());
+            ratings.add(m.rating());
         }
 
         ChartConfig config = new ChartConfig(
@@ -61,8 +64,8 @@ record ChartOptions(ScaleOptions scales, LegendOptions legend, TitleOptions titl
 record ScaleOptions(List<Axis> xAxes, List<Axis> yAxes) {
     public ScaleOptions() {
         this(List.of(new Axis(
-                new Ticks(0, 10F, 0)
-        )), List.of(new Axis(new Ticks(0, null, 1))));
+                new Ticks(0, 10F)
+        )), List.of(new Axis(new Ticks(0, null))));
     }
 }
 
@@ -81,8 +84,8 @@ record TitleOptions(boolean display) {
 record Axis(Ticks ticks) {
 }
 
-record Ticks(float min, Float max, float stepSize, boolean autoSkip) {
+record Ticks(float min, Float max) {
     public Ticks(float min, Float max, float stepSize) {
-        this(min, max, stepSize, false);
+        this(min, max);
     }
 }

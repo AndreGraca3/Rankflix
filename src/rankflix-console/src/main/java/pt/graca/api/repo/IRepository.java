@@ -1,9 +1,9 @@
 package pt.graca.api.repo;
 
 import org.jetbrains.annotations.Nullable;
-import pt.graca.api.domain.Media;
-import pt.graca.api.domain.Review;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.media.MediaWatcher;
+import pt.graca.api.domain.user.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +21,13 @@ public interface IRepository {
 
     void insertMedia(Media media);
 
-    List<Media> getAllSortedMediaByRating(@Nullable String query);
+    /**
+     * Get all media sorted by rating
+     * @param query search query to filter media
+     * @param userId user id to filter media by watched status
+     * @return list of media sorted by global rating
+     */
+    List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId);
 
     Media findMediaByTmdbId(int mediaTmdbId);
 
@@ -29,5 +35,7 @@ public interface IRepository {
 
     void deleteMedia(Media media);
 
-    Review findReview(int mediaTmdbId, UUID userId);
+    MediaWatcher findWatcher(UUID userId, int mediaTmdbId);
+
+    void clearAll();
 }

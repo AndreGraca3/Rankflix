@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.user.UserNotFoundException;
 import pt.graca.discord.bot.command.ICommand;

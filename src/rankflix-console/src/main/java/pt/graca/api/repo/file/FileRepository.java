@@ -1,12 +1,13 @@
 package pt.graca.api.repo.file;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
-import pt.graca.api.domain.Media;
-import pt.graca.api.domain.RankflixList;
-import pt.graca.api.domain.Review;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.media.MediaWatcher;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.repo.IRepository;
+import pt.graca.api.repo.file.dto.RankflixList;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +18,10 @@ import java.util.UUID;
 public class FileRepository implements IRepository {
 
     public FileRepository(Gson gson, String folderName, String listName) throws IOException {
+        if (listName.isBlank()) {
+            throw new IllegalArgumentException("List name cannot be blank");
+        }
+
         this.gson = gson;
         this.fileLocation = folderName.concat(File.separator).concat(listName).concat(".json");
 
@@ -28,7 +33,6 @@ public class FileRepository implements IRepository {
         }
 
         rankflixList = gson.fromJson(Files.readString(file.toPath()), RankflixList.class);
-        System.out.println("Loaded data created at " + rankflixList.creationDate);
     }
 
     private final String fileLocation;
@@ -78,9 +82,11 @@ public class FileRepository implements IRepository {
         rankflixList.media.add(media);
     }
 
-    public List<Media> getAllSortedMediaByRating(@Nullable String query) {
+    @Override
+    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId) {
         return rankflixList.media.stream()
                 .filter(media -> query == null || media.title.toLowerCase().contains(query.toLowerCase()))
+                .filter(media -> userId == null || media.isWatchedBy(userId))
                 .toList();
     }
 
@@ -109,19 +115,20 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public Review findReview(int mediaTmdbId, UUID userId) {
+    public MediaWatcher findWatcher(UUID userId, int mediaTmdbId) {
         var media = findMediaByTmdbId(mediaTmdbId);
         if (media == null) return null;
 
-        for (Review review : media.reviews) {
-            if (review.userId.equals(userId)) {
-                return review;
-            }
-        }
-
-        return null;
+        return media.getWatcher(userId);
     }
 
+    @Override
+    public void clearAll() {
+        rankflixList.media.clear();
+        rankflixList.users.clear();
+    }
+
+    // transaction methods, doest work with concurrent transactions, so just don't use this repo
     public void saveData() throws IOException {
         String json = gson.toJson(rankflixList);
         Files.write(new File(fileLocation).toPath(), json.getBytes());

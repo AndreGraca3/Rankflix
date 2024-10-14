@@ -1,23 +1,25 @@
 package pt.graca.api.service;
 
 import org.jetbrains.annotations.Nullable;
-import pt.graca.api.domain.Media;
+import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.Review;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.media.MediaWatcher;
+import pt.graca.api.domain.rank.RankedMedia;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.repo.transaction.ITransactionManager;
 import pt.graca.api.service.exceptions.media.MediaAlreadyExistsException;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
 import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
-import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
-import pt.graca.api.service.exceptions.review.ReviewTooOldException;
 import pt.graca.api.service.exceptions.user.UserAlreadyExistsException;
 import pt.graca.api.service.exceptions.user.UserNotFoundException;
 import pt.graca.api.service.external.content.IContentProvider;
 import pt.graca.api.service.results.MediaDetails;
 import pt.graca.api.service.results.MediaDetailsItem;
 import pt.graca.api.service.results.MediaRatingUpdateResult;
+import pt.graca.api.domain.rank.RatedMedia;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class RankflixService {
@@ -66,11 +68,7 @@ public class RankflixService {
 
     public User findUserByUsername(String username) throws Exception {
         return trManager.run(ctx -> {
-            var user = ctx.getRepository().findUserByUsername(username);
-            if (user == null) {
-                throw new UserNotFoundException(username);
-            }
-            return user;
+            return ctx.getRepository().findUserByUsername(username);
         });
     }
 
@@ -86,12 +84,8 @@ public class RankflixService {
         });
     }
 
-    public MediaDetails getMediaDetailsByTmdbId(int mediaTmdbId) {
-        return contentProvider.getMediaDetails(mediaTmdbId);
-    }
-
     public List<MediaDetailsItem> searchMedia(String query, int page) {
-        return contentProvider.searchMedia(query, page);
+        return contentProvider.searchMediaByName(query, page);
     }
 
     public MediaDetails addMedia(int mediaTmdbId) throws Exception {
@@ -100,9 +94,12 @@ public class RankflixService {
                 throw new MediaAlreadyExistsException(mediaTmdbId);
             }
 
-            MediaDetails mediaDetails = contentProvider.getMediaDetails(mediaTmdbId);
+            MediaDetails mediaDetails = contentProvider.getMediaDetailsById(mediaTmdbId);
+            if (mediaDetails == null) {
+                throw new MediaNotFoundException(mediaTmdbId);
+            }
 
-            Media media = new Media(mediaTmdbId, mediaDetails.title());
+            Media media = new Media(mediaTmdbId, mediaDetails.title);
             ctx.getRepository().insertMedia(media);
             return mediaDetails;
         });
@@ -127,19 +124,88 @@ public class RankflixService {
         });
     }
 
-    public List<Media> getAllSortedMediaByRating(@Nullable String query) throws Exception {
+    public MediaDetails addMediaWithWatchers(int mediaTmdbId, List<MediaWatcher> watchers) throws Exception {
         return trManager.run(ctx -> {
-            return ctx.getRepository().getAllSortedMediaByRating(query);
+            if (ctx.getRepository().findMediaByTmdbId(mediaTmdbId) != null) {
+                throw new MediaAlreadyExistsException(mediaTmdbId);
+            }
+
+            MediaDetails mediaDetails = contentProvider.getMediaDetailsById(mediaTmdbId);
+            if (mediaDetails == null) throw new MediaNotFoundException(mediaTmdbId);
+
+            Media media = new Media(mediaTmdbId, mediaDetails.title);
+
+            for (MediaWatcher currentWatcher : watchers) {
+                User user = ctx.getRepository().findUserById(currentWatcher.userId);
+                if (user == null) throw new UserNotFoundException(currentWatcher.userId);
+
+                if (currentWatcher.review != null) {
+                    media = media.addUser(user.id)
+                            .addReview(user.id, currentWatcher.review);
+                } else {
+                    media = media.addUser(user.id);
+                }
+            }
+
+            ctx.getRepository().insertMedia(media);
+            return mediaDetails;
         });
     }
 
-    public List<Media> getTopRankedMedia(String query) throws Exception {
+    public List<Media> getAllMedia(@Nullable String query) throws Exception {
         return trManager.run(ctx -> {
-            return ctx.getRepository().getAllSortedMediaByRating(query)
-                    .stream()
-                    .filter(media -> !media.reviews.isEmpty())
-                    .sorted((o1, o2) -> Float.compare(o2.getRating(), o1.getRating()))
-                    .toList();
+            return ctx.getRepository().getAllSortedMedia(query, null);
+        });
+    }
+
+    public RankedMedia getTopRankedMedia(@Nullable String query, @Nullable UUID userId) throws Exception {
+        return trManager.run(ctx -> {
+            if (userId != null && ctx.getRepository().findUserById(userId) == null) {
+                throw new UserNotFoundException(userId);
+            }
+
+            List<Media> mediaList = ctx.getRepository().getAllSortedMedia(query, userId);
+
+            final float[] totalRatingSum = {0};
+            final int[] totalRatings = {0};
+
+            var stream = mediaList.stream()
+                    .filter(media -> !media.getReviews().isEmpty())
+                    .filter(media -> userId == null || media.getReview(userId) != null)
+                    .sorted((o1, o2) -> {
+                        if (userId != null) {
+                            var review1 = o1.getReview(userId);
+                            var review2 = o2.getReview(userId);
+
+                            if (review1 == null || review2 == null) {
+                                return 0;
+                            }
+
+                            return Float.compare(review2.rating, review1.rating);
+                        }
+
+                        return 1;
+                    })
+                    .map(media -> {
+                        if (userId != null) {
+                            var review = media.getReview(userId);
+
+                            if (review == null) {
+                                return null;
+                            }
+
+                            totalRatingSum[0] += review.rating;
+                            totalRatings[0]++;
+                            return new RatedMedia(media.tmdbId, media.title, review.rating);
+                        }
+
+                        totalRatingSum[0] += media.ratingSum;
+                        totalRatings[0] += media.getReviews().size();
+                        return new RatedMedia(media.tmdbId, media.title, media.getRating());
+                    })
+                    .filter(Objects::nonNull);
+
+            return new RankedMedia(stream.toList(), totalRatingSum[0] / totalRatings[0], totalRatings[0]);
         });
     }
 
@@ -157,7 +223,7 @@ public class RankflixService {
         });
     }
 
-    public Review findRating(int mediaTmdbId, UUID userId) throws Exception {
+    public Review findReview(int mediaTmdbId, UUID userId) throws Exception {
         return trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -168,7 +234,7 @@ public class RankflixService {
                 throw new UserNotFoundException(userId);
             }
 
-            return ctx.getRepository().findReview(mediaTmdbId, userId);
+            return media.getReview(userId);
         });
     }
 
@@ -179,15 +245,16 @@ public class RankflixService {
                 throw new MediaNotFoundException(mediaTmdbId);
             }
 
-            if (media.reviews.stream().anyMatch(review -> review.userId.equals(userId))) {
+            if (media.getReview(userId) == null) {
                 throw new ReviewAlreadyExistsException(mediaTmdbId, userId.toString());
             }
 
-            Review review = new Review(userId, userRating, comment);
-            Media updatedMedia = media.addReview(review);
+            Review review = new Review(userRating, comment);
+            Media updatedMedia = media.addReview(userId, review);
             ctx.getRepository().updateMedia(updatedMedia);
 
-            return new MediaRatingUpdateResult(updatedMedia.tmdbId, updatedMedia.getRating(), updatedMedia.reviews.size());
+            return new MediaRatingUpdateResult(updatedMedia.tmdbId, updatedMedia.getRating(),
+                    updatedMedia.getReviews().size());
         });
     }
 
@@ -198,23 +265,14 @@ public class RankflixService {
                 throw new MediaNotFoundException(mediaTmdbId);
             }
 
-            var existingReview = media.reviews.stream()
-                    .filter(review -> review.userId.equals(userId))
-                    .findFirst()
-                    .orElseThrow(() -> new ReviewNotFoundException(mediaTmdbId));
-
-            if (existingReview.isTooOld(5 * 60)) {
-                throw new ReviewTooOldException();
-            }
-
-            Review updatedReview = existingReview.update(userRating, comment);
-            Media updatedMedia = media.updateReview(updatedReview);
+            Review review = new Review(userRating, comment);
+            Media updatedMedia = media.updateReview(userId, review);
             ctx.getRepository().updateMedia(updatedMedia);
 
-            return new MediaRatingUpdateResult(updatedMedia.tmdbId, updatedMedia.getRating(), updatedMedia.reviews.size());
+            return new MediaRatingUpdateResult(updatedMedia.tmdbId, updatedMedia.getRating(),
+                    updatedMedia.getReviews().size());
         });
     }
-
 
     public void deleteRating(int mediaTmdbId, UUID userId) throws Exception {
         trManager.run(ctx -> {
@@ -225,6 +283,12 @@ public class RankflixService {
 
             Media updatedMedia = media.removeRating(userId);
             ctx.getRepository().updateMedia(updatedMedia);
+        });
+    }
+
+    public void clearAll() throws Exception {
+        trManager.run(ctx -> {
+            ctx.getRepository().clearAll();
         });
     }
 }

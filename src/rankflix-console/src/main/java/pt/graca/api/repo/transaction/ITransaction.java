@@ -13,4 +13,6 @@ public interface ITransaction {
     public abstract void commit() throws IOException;
 
     public abstract void rollback();
+
+    public abstract void close();
 }

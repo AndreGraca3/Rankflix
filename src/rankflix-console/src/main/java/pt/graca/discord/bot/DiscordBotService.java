@@ -16,17 +16,17 @@ import pt.graca.discord.bot.command.review.DeleteReviewCommand;
 import pt.graca.discord.bot.listeners.AutoCompleteManager;
 import pt.graca.discord.bot.listeners.MediaNameAutoComplete;
 import pt.graca.discord.bot.listeners.MediaQueryAutoComplete;
-import pt.graca.infra.generator.IRankGenerator;
+import pt.graca.infra.generator.factory.RankGeneratorFactory;
 
 public class DiscordBotService {
 
-    public DiscordBotService(RankflixService rankflixService, IRankGenerator rankGenerator) {
+    public DiscordBotService(RankflixService rankflixService, RankGeneratorFactory rankGeneratorFactory) {
         this.rankflixService = rankflixService;
-        this.rankGenerator = rankGenerator;
+        this.rankGeneratorFactory = rankGeneratorFactory;
     }
 
     private final RankflixService rankflixService;
-    private final IRankGenerator rankGenerator;
+    private final RankGeneratorFactory rankGeneratorFactory;
     private JDA jda;
 
     public void start() {
@@ -39,7 +39,7 @@ public class DiscordBotService {
         commandManager.add(new CheckReviewCommand(rankflixService));
         commandManager.add(new AddReviewCommand(rankflixService));
         commandManager.add(new DeleteReviewCommand(rankflixService));
-        commandManager.add(new GenerateRankCommand(rankflixService, rankGenerator));
+        commandManager.add(new GenerateRankCommand(rankflixService, rankGeneratorFactory));
 
         var autoCompletes = new AutoCompleteManager();
         autoCompletes.add(new MediaQueryAutoComplete(rankflixService));
@@ -61,5 +61,10 @@ public class DiscordBotService {
         }
 
         jda = jdaBuilder.build();
+    }
+
+    public void stop() {
+        System.out.println("Stopping Discord bot...");
+        jda.shutdown();
     }
 }

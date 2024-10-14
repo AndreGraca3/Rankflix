@@ -19,24 +19,29 @@ abstract public class ConsoleMenu {
     protected final Scanner scanner;
     private final Map<Integer, Method> menuOptions = new HashMap<>();
 
-    public void show() {
-        try {
-            System.out.println("Choose an option:");
-            menuOptions.forEach((key, value) -> System.out.println(key + " - " + value.getAnnotation(ConsoleMenuOption.class).value()));
+    public void showForever() {
+        while (true) {
+            try {
+                System.out.println("Choose an option:");
+                menuOptions.forEach((key, value) -> System.out.println(key + " - " + value.getAnnotation(ConsoleMenuOption.class).value()));
+                System.out.println("0 - Exit");
 
-            System.out.println();
-            System.out.print("Option: ");
-            int option = Integer.parseInt(scanner.nextLine());
+                System.out.println();
+                System.out.print("Option: ");
+                int option = Integer.parseInt(scanner.nextLine());
 
-            Method method = menuOptions.get(option);
-            if (method == null) throw new IllegalArgumentException("Invalid option");
+                if (option == 0) break;
+                Method method = menuOptions.get(option);
+                if (method == null) throw new IllegalArgumentException("Invalid option");
 
-            method.invoke(this);
-            System.out.println("✅ Done!");
-        } catch (Exception e) {
-            System.out.println("❌ An error occurred: " + e.getMessage());
-        } finally {
-            System.out.println("-".repeat(50));
+                method.invoke(this);
+                System.out.println("✅ Done!");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("❌ An error occurred: " + e.getMessage());
+            } finally {
+                System.out.println("-".repeat(50));
+            }
         }
     }
 

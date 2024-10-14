@@ -1,4 +1,4 @@
-package pt.graca.api.domain;
+package pt.graca.api.domain.user;
 
 import org.jetbrains.annotations.NotNull;
 

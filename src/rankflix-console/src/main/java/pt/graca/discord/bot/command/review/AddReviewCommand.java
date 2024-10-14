@@ -8,7 +8,7 @@ import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
 import pt.graca.api.service.results.MediaRatingUpdateResult;
 import pt.graca.discord.bot.command.Consts;
 import pt.graca.discord.bot.command.ICommand;
-import pt.graca.api.domain.User;
+import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
 import pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;

@@ -9,23 +9,20 @@ public class Review {
 
     public static final int MAX_COMMENT_LENGTH = 50;
 
-    public Review(UUID userId, float rating, @Nullable String comment, Instant createdAt) {
+    public Review(float rating, @Nullable String comment, Instant createdAt) {
         validateReview(rating, comment);
-        this.userId = userId;
-        this.value = rating;
+        this.rating = rating;
         this.comment = comment;
         this.createdAt = createdAt;
     }
 
-    public Review(UUID userId, float rating, @Nullable String comment) {
+    public Review(float rating, @Nullable String comment) {
         validateReview(rating, comment);
-        this.userId = userId;
-        this.value = rating;
+        this.rating = rating;
         this.comment = comment;
     }
 
-    public final UUID userId;
-    public final float value;
+    public final float rating;
     public final String comment;
     public Instant createdAt = Instant.now();
 
@@ -47,6 +44,6 @@ public class Review {
 
     public Review update(float rating, @Nullable String comment) {
         validateReview(rating, comment);
-        return new Review(userId, rating, comment, createdAt);
+        return new Review(rating, comment, createdAt);
     }
 }

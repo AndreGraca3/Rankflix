@@ -41,8 +41,8 @@ public class DeleteMediaCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId
-                = event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
+        int mediaTmdbId =
+                event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
 
         service.removeMediaFromRanking(mediaTmdbId);
 
