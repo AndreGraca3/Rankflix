@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.listeners;
+package pt.graca.discord.listeners;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

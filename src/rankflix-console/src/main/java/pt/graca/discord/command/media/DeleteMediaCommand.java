@@ -1,12 +1,12 @@
-package pt.graca.discord.bot.command.media;
+package pt.graca.discord.command.media;
 
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;
-import pt.graca.discord.bot.command.ICommand;
+import pt.graca.discord.command.Consts.MEDIA_NAME_OPTION;
+import pt.graca.discord.command.ICommand;
 import pt.graca.api.service.RankflixService;
 
 import java.awt.*;
@@ -44,10 +44,10 @@ public class DeleteMediaCommand implements ICommand {
         int mediaTmdbId =
                 event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
 
-        service.removeMediaFromRanking(mediaTmdbId);
+        var deletedMedia = service.removeMediaFromRanking(mediaTmdbId);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                .setTitle("Media deleted")
+                .setTitle(deletedMedia.title + " has been deleted from the list")
                 .setColor(Color.GRAY)
                 .build()
         ).queue();

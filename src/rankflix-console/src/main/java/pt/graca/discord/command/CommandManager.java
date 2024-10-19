@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.command;
+package pt.graca.discord.command;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -39,6 +39,7 @@ public class CommandManager extends ListenerAdapter {
         for (ICommand command : commands) {
             if (command.getName().equals(event.getName())) {
                 try {
+                    if(event.getUser().isBot()) return;
                     event.deferReply().queue();
                     command.execute(event);
                     break;

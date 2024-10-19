@@ -10,12 +10,11 @@ public abstract class RankGenerator {
 
     protected String generateTextContent(List<RatedMedia> ranking) {
         return ranking.stream()
-                .map(media ->
-                        ranking.indexOf(media) + 1 +
-                                " - " +
-                                media.title() +
-                                " (" + String.format("%.2f", media.rating()) + ")"
-                )
+                .map(media -> generateTextLine(ranking.indexOf(media) + 1, media))
                 .reduce("", (a, b) -> a + b + "\n");
+    }
+
+    protected String generateTextLine(int position, RatedMedia media) {
+        return position + " - " + media.title() + " (" + String.format("%.2f", media.rating()) + ")";
     }
 }

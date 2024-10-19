@@ -35,6 +35,9 @@ public class MongoTransactionManagerFactory extends TransactionManagerFactory {
 
         System.out.print("Create/Select list: ");
         String listName = scanner.nextLine();
+        if (listName.isBlank()) {
+            throw new IllegalArgumentException("List name cannot be blank");
+        }
 
         return new MongoTransactionManager(mongoClient, listName);
     }

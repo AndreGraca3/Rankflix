@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.command;
+package pt.graca.discord.command;
 
 public class Consts {
 

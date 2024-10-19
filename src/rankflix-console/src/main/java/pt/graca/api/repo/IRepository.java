@@ -13,6 +13,8 @@ public interface IRepository {
 
     void insertUser(User user);
 
+    void updateUser(User user);
+
     User findUserByUsername(String username);
 
     User findUserById(UUID userId);
@@ -23,11 +25,13 @@ public interface IRepository {
 
     /**
      * Get all media sorted by rating
-     * @param query search query to filter media
-     * @param userId user id to filter media by watched status
+     *
+     * @param query  search query to filter media
+     * @param userId user id to filter media by reviews
+     * @param limit  limit of media to return
      * @return list of media sorted by global rating
      */
-    List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId);
+    List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit);
 
     Media findMediaByTmdbId(int mediaTmdbId);
 

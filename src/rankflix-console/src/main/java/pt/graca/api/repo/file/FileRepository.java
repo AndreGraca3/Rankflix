@@ -49,6 +49,16 @@ public class FileRepository implements IRepository {
     }
 
     @Override
+    public void updateUser(User user) {
+        for (int i = 0; i < rankflixList.users.size(); i++) {
+            if (rankflixList.users.get(i).id.equals(user.id)) {
+                rankflixList.users.set(i, user);
+                return;
+            }
+        }
+    }
+
+    @Override
     public User findUserByUsername(String username) {
         for (User user : rankflixList.users) {
             if (user.username.equals(username)) {
@@ -83,10 +93,11 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId) {
+    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit) {
         return rankflixList.media.stream()
                 .filter(media -> query == null || media.title.toLowerCase().contains(query.toLowerCase()))
                 .filter(media -> userId == null || media.isWatchedBy(userId))
+                .limit(limit == null ? rankflixList.media.size() : limit)
                 .toList();
     }
 

@@ -1,9 +1,9 @@
-package pt.graca.discord.bot.listeners;
+package pt.graca.discord.listeners;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import org.jetbrains.annotations.NotNull;
-import pt.graca.discord.bot.command.Consts;
+import pt.graca.discord.command.Consts;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.results.MediaDetailsItem;
 
@@ -26,7 +26,7 @@ public class MediaQueryAutoComplete implements IAutoComplete {
     public void execute(@NotNull CommandAutoCompleteInteractionEvent event) {
         var focusedOption = event.getFocusedOption();
 
-        List<MediaDetailsItem> media = service.searchMedia(focusedOption.getValue(), 1);
+        List<MediaDetailsItem> media = service.searchMediaDetailsByName(focusedOption.getValue(), 1);
 
         event.replyChoices(
                 media.stream()

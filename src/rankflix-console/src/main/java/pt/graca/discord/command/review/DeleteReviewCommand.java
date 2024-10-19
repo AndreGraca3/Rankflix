@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.command.review;
+package pt.graca.discord.command.review;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -7,13 +7,13 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.user.UserNotFoundException;
-import pt.graca.discord.bot.command.ICommand;
+import pt.graca.discord.command.ICommand;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;
+import static pt.graca.discord.command.Consts.MEDIA_NAME_OPTION;
 
 public class DeleteReviewCommand implements ICommand {
 
@@ -51,7 +51,7 @@ public class DeleteReviewCommand implements ICommand {
             throw new UserNotFoundException(discordUser.getId());
         }
 
-        service.deleteRating(mediaTmdbId, user.id);
+        service.deleteReview(mediaTmdbId, user.id);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
                 .setAuthor("| Rating deleted", null, discordUser.getAvatarUrl())

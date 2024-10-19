@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.command.review;
+package pt.graca.discord.command.review;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -6,12 +6,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
 import pt.graca.api.service.results.MediaRatingUpdateResult;
-import pt.graca.discord.bot.command.Consts;
-import pt.graca.discord.bot.command.ICommand;
+import pt.graca.discord.command.Consts;
+import pt.graca.discord.command.ICommand;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
-import pt.graca.discord.bot.command.Consts.MEDIA_NAME_OPTION;
+import pt.graca.discord.command.Consts.MEDIA_NAME_OPTION;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -67,8 +67,7 @@ public class AddReviewCommand implements ICommand {
         User user = service.findUserByDiscordId(discordUser.getId());
 
         if (user == null) {
-            user = service.createDiscordUser(
-                    discordUser.getId(), discordUser.getName(), discordUser.getAvatarUrl());
+            user = service.createDiscordUser(discordUser.getId(), discordUser.getName());
         }
 
         MediaRatingUpdateResult ratingUpdate;
@@ -82,7 +81,7 @@ public class AddReviewCommand implements ICommand {
                 .setAuthor("| Review added", null, discordUser.getAvatarUrl())
                 .setDescription(comment)
                 .addField("Your rating", String.valueOf(rating), true)
-                .addField("Average Rating", String.valueOf(ratingUpdate.averageRating()), true)
+                .addField("List's Rating", String.valueOf(ratingUpdate.averageRating()), true)
                 .addField("Total Ratings", String.valueOf(ratingUpdate.totalRatings()), true)
                 .setColor(Color.ORANGE)
                 .build()

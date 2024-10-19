@@ -1,9 +1,9 @@
-package pt.graca.discord.bot.listeners;
+package pt.graca.discord.listeners;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import org.jetbrains.annotations.NotNull;
-import pt.graca.discord.bot.command.Consts;
+import pt.graca.discord.command.Consts;
 import pt.graca.api.domain.media.Media;
 import pt.graca.api.service.RankflixService;
 
@@ -24,10 +24,9 @@ public class MediaNameAutoComplete implements IAutoComplete {
 
     @Override
     public void execute(@NotNull CommandAutoCompleteInteractionEvent event) throws Exception {
-        List<Media> media = service.getAllMedia(event.getFocusedOption().getValue());
+        List<Media> media = service.getAllMedia(event.getFocusedOption().getValue(), 25);
         event.replyChoices(media.stream()
                         .map(m -> new Command.Choice(m.title, m.tmdbId))
-                        .limit(25)
                         .toList())
                 .queue();
     }

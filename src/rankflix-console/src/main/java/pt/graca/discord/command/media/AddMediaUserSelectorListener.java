@@ -1,4 +1,4 @@
-package pt.graca.discord.bot.command.media;
+package pt.graca.discord.command.media;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
@@ -39,7 +39,7 @@ public class AddMediaUserSelectorListener extends ListenerAdapter {
                             try {
                                 var user = service.findUserByDiscordId(discordId);
                                 if (user == null) {
-                                    user = service.createDiscordUser(discordId, u.getName(), u.getAvatarUrl());
+                                    user = service.createDiscordUser(discordId, u.getName());
                                 }
                                 return user.id;
                             } catch (Exception e) {

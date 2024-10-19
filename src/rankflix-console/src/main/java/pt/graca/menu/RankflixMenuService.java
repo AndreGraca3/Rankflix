@@ -27,6 +27,16 @@ public class RankflixMenuService extends ConsoleMenu {
         service.createUser(username, null);
     }
 
+    @ConsoleMenuOption("Update user's discord ID")
+    public void updateUserDiscordId() throws Exception {
+        String username = read("Enter the username:");
+        User user = service.findUserByUsername(username);
+        if (user == null) throw new NoSuchElementException("User not found");
+
+        String newDiscordId = read("Enter the new discord ID:");
+        service.updateUserDiscordId(user.id, newDiscordId);
+    }
+
     @ConsoleMenuOption("Add review")
     public void addReview() throws Exception {
         String username = read("Enter the username: ");
@@ -42,7 +52,7 @@ public class RankflixMenuService extends ConsoleMenu {
         }
     }
 
-    @ConsoleMenuOption("Delete review (only for after 5 minutes)")
+    @ConsoleMenuOption("Delete review (bypass time limit)")
     public void deleteReview() throws Exception {
         String username = read("Enter the username: ");
         User user = service.findUserByUsername(username);
@@ -50,7 +60,7 @@ public class RankflixMenuService extends ConsoleMenu {
 
         int mediaTmdbId = Integer.parseInt(read("Enter the media's TMDB id: "));
 
-        service.deleteRating(mediaTmdbId, user.id);
+        service.forceDeleteReview(mediaTmdbId, user.id);
     }
 
     @ConsoleMenuOption("Import from Excel (overrides everything)")
@@ -70,8 +80,7 @@ public class RankflixMenuService extends ConsoleMenu {
                 var user = usersMap.computeIfAbsent(rating.user().username(), k -> {
                     try {
                         System.out.println("Adding user: " + rating.user().username());
-                        return service.createDiscordUser(
-                                rating.user().discordId(), rating.user().username(), null);
+                        return service.createDiscordUser(rating.user().discordId(), rating.user().username());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

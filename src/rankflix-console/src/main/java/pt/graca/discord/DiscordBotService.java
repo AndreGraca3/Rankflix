@@ -1,21 +1,21 @@
-package pt.graca.discord.bot;
+package pt.graca.discord;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import pt.graca.api.service.RankflixService;
-import pt.graca.discord.bot.command.CommandManager;
-import pt.graca.discord.bot.command.media.AddMediaBySearchCommand;
-import pt.graca.discord.bot.command.media.AddMediaByTmdbIdCommand;
-import pt.graca.discord.bot.command.media.AddMediaUserSelectorListener;
-import pt.graca.discord.bot.command.media.DeleteMediaCommand;
-import pt.graca.discord.bot.command.rank.GenerateRankCommand;
-import pt.graca.discord.bot.command.review.AddReviewCommand;
-import pt.graca.discord.bot.command.review.CheckReviewCommand;
-import pt.graca.discord.bot.command.review.DeleteReviewCommand;
-import pt.graca.discord.bot.listeners.AutoCompleteManager;
-import pt.graca.discord.bot.listeners.MediaNameAutoComplete;
-import pt.graca.discord.bot.listeners.MediaQueryAutoComplete;
+import pt.graca.discord.command.CommandManager;
+import pt.graca.discord.command.media.AddMediaBySearchCommand;
+import pt.graca.discord.command.media.AddMediaByTmdbIdCommand;
+import pt.graca.discord.command.media.AddMediaUserSelectorListener;
+import pt.graca.discord.command.media.DeleteMediaCommand;
+import pt.graca.discord.command.rank.GenerateRankCommand;
+import pt.graca.discord.command.review.AddReviewCommand;
+import pt.graca.discord.command.review.CheckReviewsCommand;
+import pt.graca.discord.command.review.DeleteReviewCommand;
+import pt.graca.discord.listeners.AutoCompleteManager;
+import pt.graca.discord.listeners.MediaNameAutoComplete;
+import pt.graca.discord.listeners.MediaQueryAutoComplete;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 
 public class DiscordBotService {
@@ -29,14 +29,14 @@ public class DiscordBotService {
     private final RankGeneratorFactory rankGeneratorFactory;
     private JDA jda;
 
-    public void start() {
+    public void start(){
         System.out.println("Starting Discord bot...");
 
         var commandManager = new CommandManager();
         commandManager.add(new AddMediaByTmdbIdCommand(rankflixService));
         commandManager.add(new AddMediaBySearchCommand(rankflixService));
         commandManager.add(new DeleteMediaCommand(rankflixService));
-        commandManager.add(new CheckReviewCommand(rankflixService));
+        commandManager.add(new CheckReviewsCommand(rankflixService));
         commandManager.add(new AddReviewCommand(rankflixService));
         commandManager.add(new DeleteReviewCommand(rankflixService));
         commandManager.add(new GenerateRankCommand(rankflixService, rankGeneratorFactory));

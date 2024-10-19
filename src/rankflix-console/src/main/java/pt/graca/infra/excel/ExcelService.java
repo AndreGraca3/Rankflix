@@ -34,19 +34,19 @@ public class ExcelService {
             rowsData.put(i, new ArrayList<String>());
             for (Cell cell : row) {
                 switch (cell.getCellType()) {
-                    case STRING:
-                        rowsData.get(i).add(cell.getStringCellValue());
-                        break;
-                    case NUMERIC, FORMULA:
-                        rowsData.get(i).add(String.valueOf(cell.getNumericCellValue()));
-                        break;
-                    default:
-                        rowsData.get(i).add(" ");
+                    case STRING -> {
+                        var value = cell.getStringCellValue();
+                        if (value.isBlank()) continue;
+                        rowsData.get(i).add(value);
+                    }
+                    case NUMERIC, FORMULA -> rowsData.get(i).add(String.valueOf(cell.getNumericCellValue()));
+                    default -> rowsData.get(i).add(" ");
                 }
             }
             i++;
         }
 
+        int LAST_RATE_COLUMN = rowsData.get(USER_IDS_ROW).size() + FIRST_RATE_COLUMN - 1;
         Map<Integer, ExcelUser> cellToUser = new HashMap<>();
 
         for (int j = 0; j < rowsData.get(USER_IDS_ROW).size(); j++) {
@@ -58,11 +58,11 @@ public class ExcelService {
 
         List<ExcelMedia> mediaList = new ArrayList<>();
 
-        for (int j = FIRST_MEDIA_ROW; j < rowsData.size(); j++) {
+        for (int j = FIRST_MEDIA_ROW; j < rowsData.size() - 1; j++) {
             List<ExcelRating> ratings = new ArrayList<>();
             var currentMediaRow = rowsData.get(j);
 
-            for (int k = FIRST_RATE_COLUMN; k < currentMediaRow.size() - 1; k++) {
+            for (int k = FIRST_RATE_COLUMN; k < LAST_RATE_COLUMN; k++) {
                 var ratingValue = currentMediaRow.get(k);
                 if (ratingValue.isBlank()) {
                     continue;
@@ -76,7 +76,7 @@ public class ExcelService {
             // if ratings is empty, add a rating equal to the average rating for each user
             if (ratings.isEmpty()) {
                 for (ExcelUser user : cellToUser.values()) {
-                    float averageRating = Float.parseFloat(currentMediaRow.getLast());
+                    float averageRating = Float.parseFloat(currentMediaRow.get(LAST_RATE_COLUMN + 1));
                     ratings.add(new ExcelRating(user, averageRating));
                 }
             }

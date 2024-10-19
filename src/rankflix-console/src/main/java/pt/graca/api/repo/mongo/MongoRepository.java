@@ -3,18 +3,23 @@ package pt.graca.api.repo.mongo;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.jetbrains.annotations.Nullable;
-import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.Review;
+import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.repo.IRepository;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+
+import static com.mongodb.client.model.Indexes.ascending;
 
 public class MongoRepository implements IRepository {
 
@@ -54,7 +59,17 @@ public class MongoRepository implements IRepository {
                         .append("username", user.username)
                         .append("_id", user.id.toString())
                         .append("discordId", user.discordId)
-                        .append("avatarUrl", user.avatarUrl)
+                );
+    }
+
+    @Override
+    public void updateUser(User user) {
+        database.getCollection("users")
+                .updateOne(session, new Document("_id", user.id.toString()),
+                        new Document("$set", new Document()
+                                .append("username", user.username)
+                                .append("discordId", user.discordId)
+                        )
                 );
     }
 
@@ -65,8 +80,7 @@ public class MongoRepository implements IRepository {
                 .map(document -> new User(
                         UUID.fromString(document.getString("_id")),
                         document.getString("discordId"),
-                        document.getString("username"),
-                        document.getString("avatarUrl")
+                        document.getString("username")
                 ))
                 .first();
     }
@@ -78,8 +92,7 @@ public class MongoRepository implements IRepository {
                 .map(document -> new User(
                         UUID.fromString(document.getString("_id")),
                         document.getString("discordId"),
-                        document.getString("username"),
-                        document.getString("avatarUrl")
+                        document.getString("username")
                 ))
                 .first();
     }
@@ -91,8 +104,7 @@ public class MongoRepository implements IRepository {
                 .map(document -> new User(
                         UUID.fromString(document.getString("_id")),
                         document.getString("discordId"),
-                        document.getString("username"),
-                        document.getString("avatarUrl")
+                        document.getString("username")
                 ))
                 .first();
     }
@@ -112,34 +124,84 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
-    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId) {
-        return Objects.requireNonNull(database.getCollection("lists")
-                        .find(session, new Document("name", listName))
-                        .map(document -> document.getList("media", Document.class))
-                        .first())
+    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit) {
+        List<Bson> pipeline = new ArrayList<>();
+
+        // Step 1: Match the list by name
+        pipeline.add(Aggregates.match(Filters.eq("name", listName)));
+
+        // Step 2: Unwind the media array to process each element
+        pipeline.add(Aggregates.unwind("$media"));
+
+        // Step 3: Apply filter conditions inside the media array
+        List<Bson> mediaFilters = new ArrayList<>();
+
+        // Title filter using regex
+        if (query != null && !query.isBlank()) {
+            mediaFilters.add(Filters.regex("media.title", query, "i"));
+        }
+
+        // Watchers filter based on userId and review
+        if (userId != null) {
+            mediaFilters.add(Filters.elemMatch("media.watchers", Filters.and(
+                    Filters.eq("userId", userId.toString()),
+                    Filters.exists("review")
+            )));
+        }
+
+        // Add filter condition for media
+        if (!mediaFilters.isEmpty()) {
+            pipeline.add(Aggregates.match(Filters.and(mediaFilters)));
+        }
+
+        // Step 4: Calculate average rating
+        pipeline.add(Aggregates.addFields(
+                        new Field<>("averageRating",
+                                new Document("$cond", Arrays.asList(
+                                        new Document("$gt", Arrays.asList(new Document("$size", "$media.watchers"), 0)), // Check if there are watchers
+                                        new Document("$divide", Arrays.asList("$media.ratingSum", new Document("$size", "$media.watchers"))), // Calculate average
+                                        0 // Default to 0 if no watchers
+                                )))
+                )
+        );
+
+        // Step 5: Sort the media by average rating (descending order)
+        pipeline.add(Aggregates.sort(Sorts.descending("averageRating")));
+
+        // Step 6: Limit the results if a limit is provided
+        if (limit != null && limit > 0) {
+            pipeline.add(Aggregates.limit(limit));
+        }
+
+        // Step 7: Group back the media into lists after filtering
+        pipeline.add(Aggregates.group("$_id", Accumulators.push("media", "$media")));
+
+        // Step 8: Project the media array and other necessary fields
+        pipeline.add(Aggregates.project(Projections.include("media")));
+
+        // Execute the aggregation pipeline
+        var mediaDocs = database.getCollection("lists")
+                .aggregate(pipeline)
+                .map(document -> document.getList("media", Document.class))
+                .first();
+
+        return mediaDocs == null ? new ArrayList<>() : mediaDocs
                 .stream()
-                .filter(doc -> query == null ||
-                        doc.getString("title").toLowerCase().contains(query.toLowerCase())
-                )
-                .filter(doc -> userId == null ||
-                        doc.getList("watchers", Document.class).stream()
-                                .anyMatch(watcherDoc -> watcherDoc.getString("userId").equals(userId.toString()))
-                )
                 .map(this::mapDocumentToMedia)
                 .toList();
     }
 
     @Override
     public Media findMediaByTmdbId(int mediaTmdbId) {
-        return Objects.requireNonNull(database.getCollection("lists")
-                        .find(session, new Document("name", listName))
-                        .map(document -> document.getList("media", Document.class))
-                        .first())
-                .stream()
-                .filter(doc -> doc.getInteger("tmdbId") == mediaTmdbId)
-                .map(this::mapDocumentToMedia)
-                .findFirst()
-                .orElse(null);
+       // filter and get media from array on db side using projection
+        var projection = Projections.elemMatch("media", Filters.eq("tmdbId", mediaTmdbId));
+        var mediaDoc = database.getCollection("lists")
+                .find(session, new Document("name", listName))
+                .projection(projection)
+                .map(document -> document.getList("media", Document.class))
+                .first();
+
+        return mediaDoc == null ? null : mapDocumentToMedia(mediaDoc.getFirst());
     }
 
     @Override
@@ -166,12 +228,20 @@ public class MongoRepository implements IRepository {
 
     @Override
     public MediaWatcher findWatcher(UUID userId, int mediaTmdbId) {
-        return Objects.requireNonNull(database.getCollection("lists")
-                        .find(session, new Document("name", listName))
-                        .map(document -> document.getList("media", Document.class))
-                        .first())
+        List<Bson> filters = new ArrayList<>();
+        filters.add(Filters.eq("name", listName));
+        filters.add(Filters.eq("media.tmdbId", mediaTmdbId));
+        filters.add(Filters.eq("media.watchers.userId", userId.toString()));
+
+        Bson combinedFilter = Filters.and(filters);
+
+        var mediaDocs = database.getCollection("lists")
+                .find(session, combinedFilter)
+                .map(document -> document.getList("media", Document.class))
+                .first();
+
+        return mediaDocs == null ? null : mediaDocs
                 .stream()
-                .filter(doc -> doc.getInteger("tmdbId") == mediaTmdbId)
                 .flatMap(doc -> doc.getList("watchers", Document.class).stream())
                 .filter(watcherDoc -> watcherDoc.getString("userId").equals(userId.toString()))
                 .map(this::mapDocumentToWatcher)
@@ -211,7 +281,9 @@ public class MongoRepository implements IRepository {
                 doc.getList("watchers", Document.class).stream()
                         .map(watcherDoc -> new MediaWatcher(
                                 UUID.fromString(watcherDoc.getString("userId")),
-                                mapDocumentToReview(watcherDoc.get("review", Document.class))
+                                watcherDoc.get("review", Document.class) == null
+                                        ? null
+                                        : mapDocumentToReview(watcherDoc.get("review", Document.class))
                         )).toList()
         );
     }

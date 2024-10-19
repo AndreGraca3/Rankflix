@@ -3,7 +3,6 @@ package pt.graca.api.domain.media;
 import org.jetbrains.annotations.Nullable;
 import pt.graca.api.domain.Review;
 import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
-import pt.graca.api.service.exceptions.review.UnauthorizedReviewException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,19 +26,17 @@ public class Media {
         this.watchers = watchers;
     }
 
-    public List<Review> getReviews() {
-        return watchers.stream()
-                .filter(w -> w.review != null)
-                .map(w -> w.review)
-                .toList();
-    }
-
-    public float getRating() {
+    public float getRatingAverage() {
         if (watchers.stream().noneMatch(w -> w.review != null)) {
             return 0;
         }
 
-        return ratingSum / getReviews().size();
+        // 2 decimal places
+        return (float) Math.round((ratingSum / getReviews().size()) * 100) / 100;
+    }
+
+    public List<MediaWatcher> getWatchers() {
+        return watchers;
     }
 
     public @Nullable MediaWatcher getWatcher(UUID userId) {
@@ -62,6 +59,13 @@ public class Media {
         newWatchers.add(new MediaWatcher(userId, null));
 
         return new Media(this.tmdbId, this.title, this.ratingSum, newWatchers);
+    }
+
+    public List<Review> getReviews() {
+        return watchers.stream()
+                .filter(w -> w.review != null)
+                .map(w -> w.review)
+                .toList();
     }
 
     public @Nullable Review getReview(UUID userId) {
@@ -96,13 +100,12 @@ public class Media {
         for (int i = 0; i < newWatchers.size(); i++) {
             var currentWatcher = newWatchers.get(i);
             if (currentWatcher.userId.equals(userId)) {
-
                 var currentReview = currentWatcher.review;
                 if (currentReview == null) {
                     throw new ReviewNotFoundException(tmdbId);
                 }
 
-                newRatingSum -= currentReview.rating;
+                newRatingSum += newReview.rating - currentReview.rating;
                 newWatchers.set(i, new MediaWatcher(userId, newReview));
 
                 return new Media(this.tmdbId, this.title, newRatingSum, newWatchers);

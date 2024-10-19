@@ -1,9 +1,9 @@
 package pt.graca.menu;
 
-import pt.graca.discord.bot.DiscordBotService;
 import pt.graca.api.repo.factory.TransactionManagerFactory;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.external.content.IContentProvider;
+import pt.graca.discord.DiscordBotService;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 
 import java.util.Scanner;
