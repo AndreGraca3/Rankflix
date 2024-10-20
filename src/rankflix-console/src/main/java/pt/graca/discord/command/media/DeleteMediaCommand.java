@@ -2,6 +2,7 @@ package pt.graca.discord.command.media;
 
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -41,6 +42,12 @@ public class DeleteMediaCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
+        var member = event.getMember();
+
+        if (member == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            throw new IllegalAccessException("You must be an administrator to use this command");
+        }
+
         int mediaTmdbId =
                 event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
 

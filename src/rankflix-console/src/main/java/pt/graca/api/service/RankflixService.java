@@ -10,6 +10,7 @@ import pt.graca.api.repo.transaction.ITransactionManager;
 import pt.graca.api.service.exceptions.media.MediaAlreadyExistsException;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
 import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
+import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
 import pt.graca.api.service.exceptions.review.ReviewTooOldException;
 import pt.graca.api.service.exceptions.review.UnauthorizedReviewException;
 import pt.graca.api.service.exceptions.user.UserAlreadyExistsException;
@@ -206,7 +207,8 @@ public class RankflixService {
                     return Float.compare(review2.rating, review1.rating);
                 });
             }
-            var ratedMediaStream = stream.map(media -> {
+
+            var ratedMedia = stream.map(media -> {
                         if (userId != null) {
                             var review = media.getReview(userId);
 
@@ -223,9 +225,10 @@ public class RankflixService {
                         totalRatings[0] += media.getReviews().size();
                         return new RatedMedia(media.tmdbId, media.title, media.getRatingAverage());
                     })
-                    .filter(Objects::nonNull);
+                    .filter(Objects::nonNull)
+                    .toList();
 
-            return new RankedMedia(ratedMediaStream.toList(), totalRatingSum[0] / totalRatings[0], totalRatings[0]);
+            return new RankedMedia(ratedMedia, totalRatingSum[0] / totalRatings[0], totalRatings[0]);
         });
     }
 
@@ -278,7 +281,7 @@ public class RankflixService {
 
             Review existingReview = media.getReview(userId);
             if (existingReview == null) {
-                throw new ReviewAlreadyExistsException(mediaTmdbId, userId.toString());
+                throw new ReviewNotFoundException(mediaTmdbId);
             }
 
             if (existingReview.isTooOld(MAX_REVIEW_AGE_SECS)) {
@@ -304,7 +307,7 @@ public class RankflixService {
 
             Review existingReview = media.getReview(userId);
             if (existingReview == null) {
-                throw new ReviewAlreadyExistsException(mediaTmdbId, userId.toString());
+                throw new ReviewNotFoundException(mediaTmdbId);
             }
 
             if (existingReview.isTooOld(MAX_REVIEW_AGE_SECS)) {

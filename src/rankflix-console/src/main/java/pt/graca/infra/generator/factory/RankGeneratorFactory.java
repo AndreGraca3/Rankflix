@@ -4,13 +4,11 @@ import pt.graca.infra.generator.core.CanvasGenerator;
 import pt.graca.infra.generator.core.ChartGenerator;
 import pt.graca.infra.generator.RankGenerator;
 import pt.graca.infra.generator.core.GistGenerator;
-import pt.graca.infra.generator.core.PastebinGenerator;
 import pt.graca.infra.gson.GsonSingleton;
 
 public class RankGeneratorFactory {
     private CanvasGenerator canvasGenerator;
     private ChartGenerator chartGenerator;
-    private PastebinGenerator pastebinGenerator;
     private GistGenerator gistGenerator;
 
     public RankGenerator getRankGenerator(RankGeneratorType type) {
@@ -26,12 +24,6 @@ public class RankGeneratorFactory {
                     chartGenerator = new ChartGenerator(GsonSingleton.getInstance());
                 }
                 yield chartGenerator;
-            }
-            case PASTEBIN -> {
-                if (pastebinGenerator == null) {
-                    pastebinGenerator = new PastebinGenerator();
-                }
-                yield pastebinGenerator;
             }
             case GIST -> {
                 if (gistGenerator == null) {

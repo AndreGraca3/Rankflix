@@ -78,8 +78,9 @@ public class GenerateRankCommand implements ICommand {
         // generate rank url
         String rankUrl = rankGeneratorFactory.getRankGenerator(generatorType)
                 .generateRankUrl(rankedMedia,
-                        (userOption == null ? "Global" : userOption.getAsUser().getName()) + " Ranking"
-                );
+                        (userOption == null
+                                ? rankflixService.getCurrentListName() : userOption.getAsUser().getName())
+                                + " Rank");
 
         // create the embed
         var discordUser = userOption == null ? null : userOption.getAsUser();
