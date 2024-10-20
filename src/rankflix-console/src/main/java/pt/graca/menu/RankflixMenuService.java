@@ -4,6 +4,7 @@ import pt.graca.api.domain.Review;
 import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
+import pt.graca.api.service.exceptions.RankflixException;
 import pt.graca.api.service.exceptions.review.InvalidRatingException;
 import pt.graca.infra.excel.ExcelMedia;
 import pt.graca.infra.excel.ExcelRating;
@@ -27,14 +28,23 @@ public class RankflixMenuService extends ConsoleMenu {
         service.createUser(username, null);
     }
 
-    @ConsoleMenuOption("Update user's discord ID")
-    public void updateUserDiscordId() throws Exception {
-        String username = read("Enter the username:");
-        User user = service.findUserByUsername(username);
+    @ConsoleMenuOption("List all users")
+    public void listUsers() throws Exception {
+        System.out.println("Id | Username | Discord Id");
+        service.getAllUsers().forEach(user -> System.out.println(user.id + " | " + user.username + " | " + user.discordId));
+    }
+
+    @ConsoleMenuOption("Update user")
+    public void updateUser() throws Exception {
+        String userId = read("Enter the user's internal id:");
+        User user = service.findUserById(UUID.fromString(userId));
         if (user == null) throw new NoSuchElementException("User not found");
 
-        String newDiscordId = read("Enter the new discord ID:");
-        service.updateUserDiscordId(user.id, newDiscordId);
+        String newUsername = read("Enter the new username (leave blank to keep the same):");
+        if (newUsername.isBlank()) newUsername = null;
+        String newDiscordId = read("Enter the new discord ID (leave blank to keep the same):");
+        if (newDiscordId.isBlank()) newDiscordId = null;
+        service.updateUser(user.id, newUsername, newDiscordId);
     }
 
     @ConsoleMenuOption("Add review")
@@ -63,12 +73,12 @@ public class RankflixMenuService extends ConsoleMenu {
         service.forceDeleteReview(mediaTmdbId, user.id);
     }
 
-    @ConsoleMenuOption("Import from Excel (overrides everything)")
+    @ConsoleMenuOption("Import from Excel (overrides list, keeps users)")
     public void importFromExcel() throws Exception {
         String path = read("Enter the path to the Excel file: ");
 
         List<ExcelMedia> importedMedia = ExcelService.importMedia(path.replace("\"", ""));
-        service.clearAll();
+        service.clearList();
 
         Map<String, User> usersMap = new HashMap<>();
         for (ExcelMedia media : importedMedia) {
@@ -79,9 +89,13 @@ public class RankflixMenuService extends ConsoleMenu {
             for (ExcelRating rating : media.ratings()) {
                 var user = usersMap.computeIfAbsent(rating.user().username(), k -> {
                     try {
-                        System.out.println("Adding user: " + rating.user().username());
+                        var userFromDb = service.findUserByUsername(rating.user().username());
+                        if (userFromDb != null) {
+                            return userFromDb;
+                        }
+                        System.out.println("Adding new user: " + rating.user().username());
                         return service.createDiscordUser(rating.user().discordId(), rating.user().username());
-                    } catch (Exception e) {
+                    } catch (RankflixException e) {
                         throw new RuntimeException(e);
                     }
                 });
@@ -91,5 +105,11 @@ public class RankflixMenuService extends ConsoleMenu {
 
             service.addMediaWithWatchers(media.tmdbId(), watchers);
         }
+    }
+
+    @ConsoleMenuOption("Delete everything")
+    public void deleteEverything() throws RankflixException {
+        service.clearList();
+        service.deleteAllUsers();
     }
 }

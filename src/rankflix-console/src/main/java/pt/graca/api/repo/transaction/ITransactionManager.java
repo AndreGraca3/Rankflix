@@ -1,8 +1,10 @@
 package pt.graca.api.repo.transaction;
 
-public interface ITransactionManager {
-    <T> T run(FunctionWithException<ITransaction, T> block) throws Exception;
+import pt.graca.api.service.exceptions.RankflixException;
 
-    void run(FunctionThatReturnsVoid<ITransaction> block) throws Exception;
+public interface ITransactionManager {
+    <T> T run(FunctionWithException<ITransaction, T> block) throws RankflixException;
+
+    void run(FunctionThatReturnsVoid<ITransaction> block) throws RankflixException;
 }
 

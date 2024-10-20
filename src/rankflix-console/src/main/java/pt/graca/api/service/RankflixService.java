@@ -7,6 +7,7 @@ import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.rank.RankedMedia;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.repo.transaction.ITransactionManager;
+import pt.graca.api.service.exceptions.RankflixException;
 import pt.graca.api.service.exceptions.media.MediaAlreadyExistsException;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
 import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
@@ -38,13 +39,13 @@ public class RankflixService {
 
     private static final int MAX_REVIEW_AGE_SECS = 5 * 60;
 
-    public String getCurrentListName() throws Exception {
+    public String getCurrentListName() throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().getListName();
         });
     }
 
-    public User createUser(String username, String avatarUrl) throws Exception {
+    public User createUser(String username, String avatarUrl) throws RankflixException {
         return trManager.run(ctx -> {
             if (ctx.getRepository().findUserByUsername(username) != null) {
                 throw new UserAlreadyExistsException(username);
@@ -56,7 +57,7 @@ public class RankflixService {
         });
     }
 
-    public User createDiscordUser(String discordId, String username) throws Exception {
+    public User createDiscordUser(String discordId, String username) throws RankflixException {
         return trManager.run(ctx -> {
             if (ctx.getRepository().findUserByUsername(username) != null) {
                 throw new UserAlreadyExistsException(username);
@@ -72,33 +73,45 @@ public class RankflixService {
         });
     }
 
-    public User findUserByUsername(String username) throws Exception {
+    public List<User> getAllUsers() throws RankflixException {
+        return trManager.run(ctx -> {
+            return ctx.getRepository().getAllUsers();
+        });
+    }
+
+    public User findUserByUsername(String username) throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().findUserByUsername(username);
         });
     }
 
-    public User findUserById(UUID userId) throws Exception {
+    public User findUserById(UUID userId) throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().findUserById(userId);
         });
     }
 
-    public User findUserByDiscordId(String discordId) throws Exception {
+    public User findUserByDiscordId(String discordId) throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().findUserByDiscordId(discordId);
         });
     }
 
-    public void updateUserDiscordId(UUID userId, String newDiscordId) throws Exception {
+    public void updateUser(UUID userId, @Nullable String newUsername, @Nullable String newDiscordId) throws RankflixException {
         trManager.run(ctx -> {
             User user = ctx.getRepository().findUserById(userId);
             if (user == null) {
                 throw new UserNotFoundException(userId);
             }
 
-            User updatedUser = user.updateUser(user.username, newDiscordId);
+            User updatedUser = user.updateUser(newUsername, newDiscordId);
             ctx.getRepository().updateUser(updatedUser);
+        });
+    }
+
+    public void deleteAllUsers() throws RankflixException {
+        trManager.run(ctx -> {
+            ctx.getRepository().deleteAllUsers();
         });
     }
 
@@ -110,7 +123,7 @@ public class RankflixService {
         return contentProvider.searchMediaByName(query, page);
     }
 
-    public MediaDetails addMedia(int mediaTmdbId) throws Exception {
+    public MediaDetails addMedia(int mediaTmdbId) throws RankflixException {
         return trManager.run(ctx -> {
             if (ctx.getRepository().findMediaByTmdbId(mediaTmdbId) != null) {
                 throw new MediaAlreadyExistsException(mediaTmdbId);
@@ -127,7 +140,7 @@ public class RankflixService {
         });
     }
 
-    public void addUsersToMedia(int mediaTmdbId, List<UUID> userIds) throws Exception {
+    public void addUsersToMedia(int mediaTmdbId, List<UUID> userIds) throws RankflixException {
         trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -146,7 +159,7 @@ public class RankflixService {
         });
     }
 
-    public MediaDetails addMediaWithWatchers(int mediaTmdbId, List<MediaWatcher> watchers) throws Exception {
+    public MediaDetails addMediaWithWatchers(int mediaTmdbId, List<MediaWatcher> watchers) throws RankflixException {
         return trManager.run(ctx -> {
             if (ctx.getRepository().findMediaByTmdbId(mediaTmdbId) != null) {
                 throw new MediaAlreadyExistsException(mediaTmdbId);
@@ -174,13 +187,13 @@ public class RankflixService {
         });
     }
 
-    public List<Media> getAllMedia(@Nullable String query, @Nullable int limit) throws Exception {
+    public List<Media> getAllMedia(@Nullable String query, @Nullable int limit) throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().getAllSortedMedia(query, null, limit);
         });
     }
 
-    public RankedMedia getTopRankedMedia(@Nullable String query, @Nullable UUID userId) throws Exception {
+    public RankedMedia getTopRankedMedia(@Nullable String query, @Nullable UUID userId) throws RankflixException {
         return trManager.run(ctx -> {
             if (userId != null && ctx.getRepository().findUserById(userId) == null) {
                 throw new UserNotFoundException(userId);
@@ -232,7 +245,7 @@ public class RankflixService {
         });
     }
 
-    public Media findRankedMediaByTmdbId(int mediaTmdbId) throws Exception {
+    public Media findRankedMediaByTmdbId(int mediaTmdbId) throws RankflixException {
         return trManager.run(ctx -> {
             return ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
         });
@@ -247,7 +260,12 @@ public class RankflixService {
         });
     }
 
-    public MediaRatingUpdateResult addReview(UUID userId, int mediaTmdbId, float userRating, String comment) throws Exception {
+    public MediaRatingUpdateResult addReview(
+            UUID userId,
+            int mediaTmdbId,
+            float userRating,
+            String comment
+    ) throws RankflixException {
         return trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -272,7 +290,12 @@ public class RankflixService {
         });
     }
 
-    public MediaRatingUpdateResult updateReview(UUID userId, int mediaTmdbId, float userRating, String comment) throws Exception {
+    public MediaRatingUpdateResult updateReview(
+            UUID userId,
+            int mediaTmdbId,
+            float userRating,
+            String comment
+    ) throws RankflixException {
         return trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -298,7 +321,7 @@ public class RankflixService {
         });
     }
 
-    public void deleteReview(int mediaTmdbId, UUID userId) throws Exception {
+    public void deleteReview(int mediaTmdbId, UUID userId) throws RankflixException {
         trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -319,7 +342,7 @@ public class RankflixService {
         });
     }
 
-    public void forceDeleteReview(int mediaTmdbId, UUID userId) throws Exception {
+    public void forceDeleteReview(int mediaTmdbId, UUID userId) throws RankflixException {
         trManager.run(ctx -> {
             Media media = ctx.getRepository().findMediaByTmdbId(mediaTmdbId);
             if (media == null) {
@@ -336,9 +359,9 @@ public class RankflixService {
         });
     }
 
-    public void clearAll() throws Exception {
+    public void clearList() throws RankflixException {
         trManager.run(ctx -> {
-            ctx.getRepository().clearAll();
+            ctx.getRepository().clearList();
         });
     }
 }

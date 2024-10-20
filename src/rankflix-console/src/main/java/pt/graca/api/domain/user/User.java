@@ -1,6 +1,7 @@
 package pt.graca.api.domain.user;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -30,7 +31,9 @@ public class User {
 
     public String username;
 
-    public User updateUser(String username, String discordId) {
-        return new User(this.id, discordId, username);
+    public User updateUser(@Nullable String username,@Nullable String discordId) {
+        var newUsername = username == null ? this.username : username;
+        var newDiscordId = discordId == null ? this.discordId : discordId;
+        return new User(this.id, newDiscordId, newUsername);
     }
 }

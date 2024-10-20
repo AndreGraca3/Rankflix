@@ -35,10 +35,10 @@ abstract public class ConsoleMenu {
                 if (method == null) throw new IllegalArgumentException("Invalid option");
 
                 method.invoke(this);
-                System.out.println("✅ Done!");
+                System.out.println("Done!");
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("❌ An error occurred: " + e.getMessage());
+                System.out.println("Oops! An error occurred: " + e.getMessage());
             } finally {
                 System.out.println("-".repeat(50));
             }

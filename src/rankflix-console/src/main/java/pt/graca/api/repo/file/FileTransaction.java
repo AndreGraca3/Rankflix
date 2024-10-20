@@ -10,8 +10,12 @@ public class FileTransaction implements ITransaction {
 
     private final FileRepository repository;
 
-    public FileTransaction(Gson gson, String folderName, String listName) throws IOException {
-        repository = new FileRepository(gson, folderName, listName);
+    public FileTransaction(Gson gson, String folderName, String listName) {
+        try {
+            repository = new FileRepository(gson, folderName, listName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -25,7 +29,7 @@ public class FileTransaction implements ITransaction {
     }
 
     @Override
-    public void commit() throws IOException {
+    public void commit() {
         repository.saveData();
     }
 

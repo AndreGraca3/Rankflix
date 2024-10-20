@@ -7,6 +7,7 @@ import pt.graca.api.repo.transaction.FunctionThatReturnsVoid;
 import pt.graca.api.repo.transaction.FunctionWithException;
 import pt.graca.api.repo.transaction.ITransaction;
 import pt.graca.api.repo.transaction.ITransactionManager;
+import pt.graca.api.service.exceptions.RankflixException;
 
 public class MongoTransactionManager implements ITransactionManager {
 
@@ -21,7 +22,7 @@ public class MongoTransactionManager implements ITransactionManager {
     private final String listName;
 
     @Override
-    public <T> T run(FunctionWithException<ITransaction, T> block) throws Exception {
+    public <T> T run(FunctionWithException<ITransaction, T> block) throws RankflixException {
         var transaction = createTransaction();
 
         transaction.begin();
@@ -36,14 +37,14 @@ public class MongoTransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void run(FunctionThatReturnsVoid<ITransaction> block) throws Exception {
+    public void run(FunctionThatReturnsVoid<ITransaction> block) throws RankflixException {
         var transaction = createTransaction();
 
         transaction.begin();
         try {
             block.apply(transaction);
             transaction.commit();
-        } catch (Exception e) {
+        } catch (RankflixException e) {
             transaction.rollback();
             throw e;
         }

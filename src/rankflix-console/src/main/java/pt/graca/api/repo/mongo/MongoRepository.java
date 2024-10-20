@@ -63,6 +63,18 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
+    public List<User> getAllUsers() {
+        return database.getCollection("users")
+                .find(session)
+                .map(document -> new User(
+                        UUID.fromString(document.getString("_id")),
+                        document.getString("discordId"),
+                        document.getString("username")
+                ))
+                .into(new ArrayList<>());
+    }
+
+    @Override
     public void updateUser(User user) {
         database.getCollection("users")
                 .updateOne(session, new Document("_id", user.id.toString()),
@@ -107,6 +119,12 @@ public class MongoRepository implements IRepository {
                         document.getString("username")
                 ))
                 .first();
+    }
+
+    @Override
+    public void deleteAllUsers() {
+        database.getCollection("users")
+                .deleteMany(session, new Document());
     }
 
     @Override
@@ -250,9 +268,7 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
-    public void clearAll() {
-        database.getCollection("users").deleteMany(session, new Document());
-
+    public void clearList() {
         database.getCollection("lists")
                 .updateOne(session, new Document("name", listName),
                         new Document("$set", new Document("media", List.of()))

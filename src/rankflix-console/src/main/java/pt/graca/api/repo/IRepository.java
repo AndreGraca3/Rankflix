@@ -15,11 +15,15 @@ public interface IRepository {
 
     void updateUser(User user);
 
+    List<User> getAllUsers();
+
     User findUserByUsername(String username);
 
     User findUserById(UUID userId);
 
     User findUserByDiscordId(String discordId);
+
+    void deleteAllUsers();
 
     void insertMedia(Media media);
 
@@ -41,5 +45,5 @@ public interface IRepository {
 
     MediaWatcher findWatcher(UUID userId, int mediaTmdbId);
 
-    void clearAll();
+    void clearList();
 }

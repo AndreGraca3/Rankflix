@@ -59,6 +59,11 @@ public class FileRepository implements IRepository {
     }
 
     @Override
+    public List<User> getAllUsers() {
+        return rankflixList.users;
+    }
+
+    @Override
     public User findUserByUsername(String username) {
         for (User user : rankflixList.users) {
             if (user.username.equals(username)) {
@@ -86,6 +91,11 @@ public class FileRepository implements IRepository {
             }
         }
         return null;
+    }
+
+    @Override
+    public void deleteAllUsers() {
+        rankflixList.users.clear();
     }
 
     public void insertMedia(Media media) {
@@ -134,14 +144,18 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public void clearAll() {
+    public void clearList() {
         rankflixList.media.clear();
         rankflixList.users.clear();
     }
 
     // transaction methods, doest work with concurrent transactions, so just don't use this repo
-    public void saveData() throws IOException {
+    public void saveData() {
         String json = gson.toJson(rankflixList);
-        Files.write(new File(fileLocation).toPath(), json.getBytes());
+        try {
+            Files.write(new File(fileLocation).toPath(), json.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
