@@ -2,12 +2,10 @@ package pt.graca.infra.generator.core;
 
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
-import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.rank.RankedMedia;
 import pt.graca.infra.generator.RankGenerator;
 
 import java.io.IOException;
-import java.util.List;
 
 public class GistGenerator extends RankGenerator {
 
@@ -29,7 +27,7 @@ public class GistGenerator extends RankGenerator {
             return gitHub
                     .createGist()
                     .public_(false)
-                    .file(title + ".html", generateTextContent(ranking.rankedMedia()))
+                    .file(title + ".html", generateTextContent(ranking.media()))
                     .create()
                     .getHtmlUrl()
                     .toString();

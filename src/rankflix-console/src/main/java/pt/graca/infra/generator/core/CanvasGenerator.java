@@ -11,13 +11,12 @@ import java.awt.image.BufferedImage;
 public class CanvasGenerator extends RankGenerator {
     public String generateRankUrl(RankedMedia ranking, String title) {
         int width = 1920; // Width of the image
-        int baseHeight = 1080; // Base height for the image
         int fontSize = 50; // Main title font size
         int lineHeight = fontSize + 20; // Height for each line
         int padding = 50; // Padding for the image
         int spaceBetweenTitle = 100; // Space between the title and the list of ranked media
 
-        int numberOfMovies = ranking.rankedMedia().size();
+        int numberOfMovies = ranking.media().size();
 
         // Calculate content height and total image height
         int contentHeight = lineHeight * numberOfMovies;
@@ -57,7 +56,7 @@ public class CanvasGenerator extends RankGenerator {
         // Calculate maximum text width for centering all titles
         int maxTextWidth = 0;
         for (int i = 0; i < numberOfMovies; i++) {
-            RatedMedia media = ranking.rankedMedia().get(i);
+            RatedMedia media = ranking.media().get(i);
             String rankedText = generateTextLine(i + 1, media);
             int textWidth = textMetrics.stringWidth(rankedText);
             maxTextWidth = Math.max(maxTextWidth, textWidth);
@@ -68,7 +67,7 @@ public class CanvasGenerator extends RankGenerator {
 
         // Draw each ranked media title centered
         for (int i = 0; i < numberOfMovies; i++) {
-            RatedMedia media = ranking.rankedMedia().get(i);
+            RatedMedia media = ranking.media().get(i);
             String rankedText = generateTextLine(i + 1, media);
             g2d.drawString(rankedText, textX, currentY);
             currentY += lineHeight; // Move to the next line

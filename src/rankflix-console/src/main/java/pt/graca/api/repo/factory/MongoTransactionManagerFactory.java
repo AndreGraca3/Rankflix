@@ -6,6 +6,7 @@ import com.mongodb.client.MongoDatabase;
 import pt.graca.api.repo.mongo.MongoTransactionManager;
 import pt.graca.api.repo.transaction.ITransactionManager;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class MongoTransactionManagerFactory extends TransactionManagerFactory {
@@ -24,18 +25,37 @@ public class MongoTransactionManagerFactory extends TransactionManagerFactory {
     @Override
     public ITransactionManager createTransactionManager() {
         System.out.println("Searching for lists...");
-        var lists = database.getCollection("lists");
-        if (lists.countDocuments() != 0) {
-            System.out.println("Lists available:");
-            lists.find().forEach(document -> System.out.println("• " + document.get("name")));
-        } else {
-            System.out.println("No lists available.");
-        }
         System.out.println();
 
-        System.out.print("Create/Select list: ");
-        String listName = scanner.nextLine();
-        if (listName.isBlank()) {
+        var lists = database.getCollection("lists");
+        ArrayList<String> names = new ArrayList<>();
+
+        System.out.println("0 - Create new list");
+
+        if (lists.countDocuments() != 0) {
+            var documents = lists.find();
+            var index = 1;
+
+            names = new ArrayList<>();
+
+            for (var doc : documents) {
+                String name = doc.getString("name");
+                System.out.println(index + " - " + name);
+                names.add(name);
+                index++;
+            }
+        }
+
+        System.out.println();
+        System.out.print("Select option: ");
+
+        int option = Integer.parseInt(scanner.nextLine());
+
+        String listName = option == 0 ? null : names.get(option - 1);
+
+        System.out.println("-".repeat(50));
+
+        if (listName == null || listName.isBlank()) {
             throw new IllegalArgumentException("List name cannot be blank");
         }
 

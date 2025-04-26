@@ -5,19 +5,20 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import pt.graca.Utils;
+import pt.graca.api.domain.Review;
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.user.User;
+import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.results.MediaDetails;
 import pt.graca.discord.command.Consts;
 import pt.graca.discord.command.ICommand;
-import pt.graca.api.domain.media.Media;
-import pt.graca.api.domain.Review;
-import pt.graca.api.domain.user.User;
-import pt.graca.api.service.RankflixService;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CheckReviewsCommand implements ICommand {
 
@@ -77,7 +78,7 @@ public class CheckReviewsCommand implements ICommand {
         User user = service.findUserByDiscordId(discordUser.getId());
         if (user == null) throw new NoSuchElementException("User not found");
 
-        Review review = media.getReview(user.id);
+        Review review = media.getReviewByUserId(user.id);
         if (review == null) {
             throw new NoSuchElementException("User has not rated this media");
         }
@@ -94,7 +95,7 @@ public class CheckReviewsCommand implements ICommand {
     }
 
     private void checkReviewsForMedia(SlashCommandInteractionEvent event, Media media, MediaDetails mediaDetails) {
-        String userRatingsString = media.getWatchers().parallelStream()
+        String userRatingsString = media.watchers.parallelStream()
                 .map(w -> {
                     User user;
                     try {
@@ -113,7 +114,7 @@ public class CheckReviewsCommand implements ICommand {
                 .setDescription(userRatingsString)
                 .setThumbnail(mediaDetails.posterUrl)
                 .setColor(Color.ORANGE)
-                .addField("List's rating", String.valueOf(media.getRatingAverage()), true)
+                .addField("List's rating", String.valueOf(media.averageRating), true)
                 .addField("Global rating", String.valueOf(mediaDetails.globalRating), true)
                 .addField("Release Date", Utils.localDateToString(mediaDetails.releaseDate), true)
                 .build()

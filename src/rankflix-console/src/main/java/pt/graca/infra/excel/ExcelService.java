@@ -1,90 +1,100 @@
 package pt.graca.infra.excel;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import pt.graca.api.domain.Review;
+import pt.graca.api.domain.media.Media;
+import pt.graca.api.domain.media.MediaWatcher;
+import pt.graca.api.domain.user.User;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ExcelService {
 
-    private static final int USER_IDS_ROW = 0;
-    private static final int USERNAMES_ROW = 1;
-    private static final int FIRST_MEDIA_ROW = 2;
+    private static final int USER_DISCORD_IDS_ROW_IDX = 2;
+    private static final int USER_USERNAMES_ROW_IDX = 3;
+    private static final int FIRST_USER_RATE_COLUMN_IDX = getColumnIdx('E');
 
-    private static final int MEDIA_IDS_COLUMN = 0;
-    private static final int MEDIA_TITLES_COLUMN = 1;
-    private static final int FIRST_RATE_COLUMN = 2;
+    private static final int FIRST_MEDIA_ROW_IDX = 4;
+    private static final int MEDIA_IDS_COLUMN_IDX = getColumnIdx('C');
+    private static final int MEDIA_TITLES_COLUMN_IDX = getColumnIdx('D');
 
-    public static List<ExcelMedia> importMedia(String location) throws Exception {
+    public static ExcelImportResult importMedia(String location) throws Exception {
         FileInputStream file = new FileInputStream(location);
         Workbook workbook = new XSSFWorkbook(file);
         Sheet sheet = workbook.getSheetAt(0);
 
-        Map<Integer, List<String>> rowsData = new HashMap<>();
-        int i = 0;
-        for (Row row : sheet) {
-            rowsData.put(i, new ArrayList<String>());
-            for (Cell cell : row) {
-                switch (cell.getCellType()) {
-                    case STRING -> {
-                        var value = cell.getStringCellValue();
-                        if (value.isBlank()) continue;
-                        rowsData.get(i).add(value);
-                    }
-                    case NUMERIC, FORMULA -> rowsData.get(i).add(String.valueOf(cell.getNumericCellValue()));
-                    default -> rowsData.get(i).add(" ");
-                }
-            }
-            i++;
+        Row userIdsRow = sheet.getRow(USER_DISCORD_IDS_ROW_IDX);
+        Row usernamesRow = sheet.getRow(USER_USERNAMES_ROW_IDX);
+
+        HashMap<Integer, User> columnIdxToUser = new HashMap<>();
+        var userIdsCount = userIdsRow.getPhysicalNumberOfCells();
+        var averageRateColumnIdx = FIRST_USER_RATE_COLUMN_IDX + userIdsCount;
+
+        for (int i = FIRST_USER_RATE_COLUMN_IDX; i < averageRateColumnIdx; i++) {
+            var userIdCell = userIdsRow.getCell(i);
+            String discordId = userIdCell.getStringCellValue();
+
+            String username = usernamesRow.getCell(i).getStringCellValue();
+            columnIdxToUser.put(i, new User(discordId, username));
         }
 
-        int LAST_RATE_COLUMN = rowsData.get(USER_IDS_ROW).size() + FIRST_RATE_COLUMN - 1;
-        Map<Integer, ExcelUser> cellToUser = new HashMap<>();
+        var mediaCount = sheet.getLastRowNum() - FIRST_MEDIA_ROW_IDX;
+        List<Media> mediaList = new ArrayList<>();
 
-        for (int j = 0; j < rowsData.get(USER_IDS_ROW).size(); j++) {
-            cellToUser.put(j, new ExcelUser(
-                    rowsData.get(USER_IDS_ROW).get(j),
-                    rowsData.get(USERNAMES_ROW).get(j)
-            ));
-        }
+        for (int i = FIRST_MEDIA_ROW_IDX; i <= mediaCount - 1; i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
 
-        List<ExcelMedia> mediaList = new ArrayList<>();
+            int mediaId = (int) row.getCell(MEDIA_IDS_COLUMN_IDX).getNumericCellValue();
+            String title = row.getCell(MEDIA_TITLES_COLUMN_IDX).getStringCellValue();
 
-        for (int j = FIRST_MEDIA_ROW; j < rowsData.size() - 1; j++) {
-            List<ExcelRating> ratings = new ArrayList<>();
-            var currentMediaRow = rowsData.get(j);
+            List<MediaWatcher> watchers = new ArrayList<>();
 
-            for (int k = FIRST_RATE_COLUMN; k < LAST_RATE_COLUMN; k++) {
-                var ratingValue = currentMediaRow.get(k);
-                if (ratingValue.isBlank()) {
+            for (int j = FIRST_USER_RATE_COLUMN_IDX; j < averageRateColumnIdx; j++) {
+                var ratingCell = row.getCell(j);
+
+                if (ratingCell.getCellType() == CellType.BLANK) {
+                    if (!isYellowBackground(ratingCell)) continue;
+                    User user = columnIdxToUser.get(j);
+                    watchers.add(new MediaWatcher(user.id, null));
                     continue;
                 }
-                ratings.add(new ExcelRating(cellToUser.get(k - FIRST_RATE_COLUMN), Float.parseFloat(ratingValue)));
+
+                float rating = (float) ratingCell.getNumericCellValue();
+
+                User user = columnIdxToUser.get(j);
+                watchers.add(new MediaWatcher(user.id, new Review(rating, null)));
             }
 
-            int mediaId = (int) Float.parseFloat(currentMediaRow.get(MEDIA_IDS_COLUMN));
-            String mediaTitle = currentMediaRow.get(MEDIA_TITLES_COLUMN);
+            var averageRating = (float) row.getCell(averageRateColumnIdx).getNumericCellValue();
 
-            // if ratings is empty, add a rating equal to the average rating for each user
-            if (ratings.isEmpty()) {
-                for (ExcelUser user : cellToUser.values()) {
-                    float averageRating = Float.parseFloat(currentMediaRow.get(LAST_RATE_COLUMN + 1));
-                    ratings.add(new ExcelRating(user, averageRating));
-                }
-            }
-
-            mediaList.add(new ExcelMedia(mediaId, mediaTitle, ratings));
+            var media = new Media(mediaId, title, averageRating, watchers);
+            mediaList.add(media);
         }
 
-        workbook.close();
-        return mediaList;
+        return new ExcelImportResult(mediaList, columnIdxToUser.values().stream().toList());
+    }
+
+    private static boolean isYellowBackground(Cell cell) {
+        if (cell == null) return false;
+
+        CellStyle style = cell.getCellStyle();
+        if (!(style instanceof XSSFCellStyle)) return false;
+
+        XSSFColor color = ((XSSFCellStyle) style).getFillForegroundXSSFColor();
+        if (color == null || color.getRGB() == null) return false;
+
+        return Arrays.equals(color.getRGB(), new byte[]{(byte) 255, (byte) 255, 0});
+    }
+
+    private static int getColumnIdx(char column) {
+        return column - 'A';
     }
 }

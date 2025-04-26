@@ -1,16 +1,15 @@
 package pt.graca.menu;
 
-import pt.graca.api.domain.Review;
-import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.RankflixException;
 import pt.graca.api.service.exceptions.review.InvalidRatingException;
-import pt.graca.infra.excel.ExcelMedia;
-import pt.graca.infra.excel.ExcelRating;
+import pt.graca.infra.excel.ExcelImportResult;
 import pt.graca.infra.excel.ExcelService;
 
-import java.util.*;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+import java.util.UUID;
 
 public class RankflixMenuService extends ConsoleMenu {
 
@@ -73,41 +72,20 @@ public class RankflixMenuService extends ConsoleMenu {
         service.forceDeleteReview(mediaTmdbId, user.id);
     }
 
-    @ConsoleMenuOption("Import from Excel (overrides list, keeps users)")
+    @ConsoleMenuOption("Import from Excel (delete everything first)")
     public void importFromExcel() throws Exception {
         String path = read("Enter the path to the Excel file: ");
 
-        List<ExcelMedia> importedMedia = ExcelService.importMedia(path.replace("\"", ""));
-        service.clearList();
+        ExcelImportResult importedExcelRes = ExcelService.importMedia(path.replace("\"", ""));
 
-        Map<String, User> usersMap = new HashMap<>();
-        for (ExcelMedia media : importedMedia) {
-            System.out.println("Adding media: " + media.title());
+        System.out.println("Deleting everything...");
+        deleteEverything();
 
-            List<MediaWatcher> watchers = new ArrayList<>();
-
-            for (ExcelRating rating : media.ratings()) {
-                var user = usersMap.computeIfAbsent(rating.user().username(), k -> {
-                    try {
-                        var userFromDb = service.findUserByUsername(rating.user().username());
-                        if (userFromDb != null) {
-                            return userFromDb;
-                        }
-                        System.out.println("Adding new user: " + rating.user().username());
-                        return service.createDiscordUser(rating.user().discordId(), rating.user().username());
-                    } catch (RankflixException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-
-                watchers.add(new MediaWatcher(user.id, new Review(rating.rating(), null)));
-            }
-
-            service.addMediaWithWatchers(media.tmdbId(), watchers);
-        }
+        System.out.println("Importing, this may take a while...");
+        service.importMediasWithWatchersRange(importedExcelRes.importedMedia(), importedExcelRes.importedUsers());
     }
 
-    @ConsoleMenuOption("Delete everything")
+    @ConsoleMenuOption("Reset")
     public void deleteEverything() throws RankflixException {
         service.clearList();
         service.deleteAllUsers();

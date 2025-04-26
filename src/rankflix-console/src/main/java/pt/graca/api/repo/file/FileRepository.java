@@ -1,7 +1,6 @@
 package pt.graca.api.repo.file;
 
 import com.google.gson.Gson;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.media.MediaWatcher;
@@ -46,6 +45,10 @@ public class FileRepository implements IRepository {
 
     public void insertUser(User user) {
         rankflixList.users.add(user);
+    }
+
+    public void insertUserRange(List<User> users) {
+        rankflixList.users.addAll(users);
     }
 
     @Override
@@ -103,9 +106,14 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit) {
+    public void insertMediaRange(List<Media> mediaItems) {
+        rankflixList.media.addAll(mediaItems);
+    }
+
+    @Override
+    public List<Media> getAllSortedMedia(@Nullable String searchQuery, @Nullable UUID userId, @Nullable Integer limit) {
         return rankflixList.media.stream()
-                .filter(media -> query == null || media.title.toLowerCase().contains(query.toLowerCase()))
+                .filter(media -> searchQuery == null || media.title.toLowerCase().contains(searchQuery.toLowerCase()))
                 .filter(media -> userId == null || media.isWatchedBy(userId))
                 .limit(limit == null ? rankflixList.media.size() : limit)
                 .toList();
@@ -140,7 +148,7 @@ public class FileRepository implements IRepository {
         var media = findMediaByTmdbId(mediaTmdbId);
         if (media == null) return null;
 
-        return media.getWatcher(userId);
+        return media.getWatcherByUserId(userId);
     }
 
     @Override

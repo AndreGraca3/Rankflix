@@ -1,9 +1,9 @@
 package pt.graca;
 
-import pt.graca.infra.generator.factory.RankGeneratorFactory;
-import pt.graca.menu.MainMenuService;
 import pt.graca.api.repo.factory.MongoTransactionManagerFactory;
 import pt.graca.api.service.external.content.TmdbProvider;
+import pt.graca.infra.generator.factory.RankGeneratorFactory;
+import pt.graca.menu.MainMenuService;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Welcome to Administrator Rankflix console :)");
+        System.out.println("Welcome to Administrator Rankflix console app :)");
         try {
             var properties = new Properties();
             properties.load(Main.class.getClassLoader().getResourceAsStream("version.properties"));

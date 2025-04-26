@@ -2,7 +2,6 @@ package pt.graca.infra.generator.core;
 
 import com.google.gson.Gson;
 import io.quickchart.QuickChart;
-import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.rank.RankedMedia;
 import pt.graca.api.domain.rank.RatedMedia;
 import pt.graca.infra.generator.RankGenerator;
@@ -23,8 +22,8 @@ public class ChartGenerator extends RankGenerator {
 
         List<String> titles = new ArrayList<>();
         List<Float> ratings = new ArrayList<>();
-        for (int i = 0; i < media.rankedMedia().size(); i++) {
-            RatedMedia m = media.rankedMedia().get(i);
+        for (int i = 0; i < media.media().size(); i++) {
+            RatedMedia m = media.media().get(i);
             titles.add(i + 1 + "º " + m.title());
             ratings.add(m.rating());
         }

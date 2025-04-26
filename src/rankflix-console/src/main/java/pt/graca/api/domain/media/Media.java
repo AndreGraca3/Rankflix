@@ -2,7 +2,7 @@ package pt.graca.api.domain.media;
 
 import org.jetbrains.annotations.Nullable;
 import pt.graca.api.domain.Review;
-import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
+import pt.graca.api.service.exceptions.review.UnauthorizedReviewException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,45 +12,32 @@ public class Media {
 
     public final int tmdbId;
     public final String title;
-    public final float ratingSum;
+    public final float averageRating;
     public final List<MediaWatcher> watchers;
 
     public Media(int tmdbId, String title) {
         this(tmdbId, title, 0, new ArrayList<>());
     }
 
-    public Media(int tmdbId, String title, float ratingSum, List<MediaWatcher> watchers) {
+    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers) {
         this.tmdbId = tmdbId;
         this.title = title;
-        this.ratingSum = ratingSum;
+        this.averageRating = averageRating;
         this.watchers = watchers;
     }
 
-    public float getRatingAverage() {
-        if (watchers.stream().noneMatch(w -> w.review != null)) {
-            return 0;
-        }
-
-        // 2 decimal places
-        return (float) Math.round((ratingSum / getReviews().size()) * 100) / 100;
-    }
-
-    public List<MediaWatcher> getWatchers() {
-        return watchers;
-    }
-
-    public @Nullable MediaWatcher getWatcher(UUID userId) {
-        var a = watchers.stream()
+    public @Nullable MediaWatcher getWatcherByUserId(UUID userId) {
+        var watcher = watchers.stream()
                 .filter(w -> w.userId.equals(userId))
                 .findFirst();
-        return a.orElse(null);
+        return watcher.orElse(null);
     }
 
     public boolean isWatchedBy(UUID userId) {
-        return getWatcher(userId) != null;
+        return getWatcherByUserId(userId) != null;
     }
 
-    public Media addUser(UUID userId) {
+    public Media addUserAsWatcher(UUID userId) {
         if (isWatchedBy(userId)) {
             return this;
         }
@@ -58,7 +45,7 @@ public class Media {
         List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
         newWatchers.add(new MediaWatcher(userId, null));
 
-        return new Media(this.tmdbId, this.title, this.ratingSum, newWatchers);
+        return new Media(this.tmdbId, this.title, this.averageRating, newWatchers);
     }
 
     public List<Review> getReviews() {
@@ -68,8 +55,8 @@ public class Media {
                 .toList();
     }
 
-    public @Nullable Review getReview(UUID userId) {
-        var watcher = getWatcher(userId);
+    public @Nullable Review getReviewByUserId(UUID userId) {
+        var watcher = getWatcherByUserId(userId);
 
         if (watcher == null) {
             return null;
@@ -78,63 +65,67 @@ public class Media {
         return watcher.review;
     }
 
-    public Media addReview(UUID userId, Review review) {
-        List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
-        for (int i = 0; i < newWatchers.size(); i++) {
-            var currentWatcher = newWatchers.get(i);
-            if (currentWatcher.userId.equals(userId)) {
+    public Media upsertReview(UUID userId, Review review) throws UnauthorizedReviewException {
+        float averagesSum = 0;
+        int reviewsCount = 0;
+        boolean isWatcher = false;
+
+        List<MediaWatcher> newWatchers = new ArrayList<>(watchers);
+
+        for (int i = 0; i < watchers.size(); i++) {
+            var currWatcher = watchers.get(i);
+
+            if (currWatcher.userId.equals(userId)) {
+                isWatcher = true;
+
+                if (currWatcher.review != null) {
+                    // Current watcher had a review, remove it from the sum before adding the new one
+                    averagesSum -= currWatcher.review.rating;
+                }
                 newWatchers.set(i, new MediaWatcher(userId, review));
-                break;
+                averagesSum += review.rating;
+                reviewsCount++;
+            } else {
+                // Other watchers
+                if (currWatcher.review != null) {
+                    averagesSum += currWatcher.review.rating;
+                    reviewsCount++;
+                }
             }
         }
 
-        float newRatingSum = this.ratingSum + review.rating;
+        if (!isWatcher) {
+            throw new UnauthorizedReviewException();
+        }
 
-        return new Media(this.tmdbId, this.title, newRatingSum, newWatchers);
+        float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
+
+        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers);
     }
 
-    public Media updateReview(UUID userId, Review newReview) throws ReviewNotFoundException {
+    public Media removeReview(UUID userId) {
+        float averagesSum = 0;
+        int reviewsCount = 0;
+
         List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
-        float newRatingSum = this.ratingSum;
 
         for (int i = 0; i < newWatchers.size(); i++) {
             var currentWatcher = newWatchers.get(i);
+
             if (currentWatcher.userId.equals(userId)) {
-                var currentReview = currentWatcher.review;
-                if (currentReview == null) {
-                    throw new ReviewNotFoundException(tmdbId);
+                if (currentWatcher.review != null) {
+                    newWatchers.set(i, new MediaWatcher(userId, null));
                 }
-
-                newRatingSum += newReview.rating - currentReview.rating;
-                newWatchers.set(i, new MediaWatcher(userId, newReview));
-
-                return new Media(this.tmdbId, this.title, newRatingSum, newWatchers);
+            } else {
+                if (currentWatcher.review != null) {
+                    averagesSum += currentWatcher.review.rating;
+                    reviewsCount++;
+                }
             }
         }
 
-        throw new ReviewNotFoundException(tmdbId);
-    }
+        float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
 
-    public Media removeRating(UUID userId) {
-        List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
-        float newRatingSum = this.ratingSum;
-
-        for (int i = 0; i < newWatchers.size(); i++) {
-            var currentWatcher = newWatchers.get(i);
-            if (currentWatcher.userId.equals(userId)) {
-
-                var currentReview = currentWatcher.review;
-                if (currentReview == null) {
-                    return this;
-                }
-
-                newRatingSum -= currentReview.rating;
-                newWatchers.set(i, new MediaWatcher(userId, null));
-
-                return new Media(this.tmdbId, this.title, newRatingSum, newWatchers);
-            }
-        }
-
-        return this;
+        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers);
     }
 }

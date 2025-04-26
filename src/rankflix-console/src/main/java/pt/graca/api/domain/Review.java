@@ -3,11 +3,10 @@ package pt.graca.api.domain;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public class Review {
 
-    public static final int MAX_COMMENT_LENGTH = 50;
+    public static final int MAX_COMMENT_LENGTH = 100;
 
     public Review(float rating, @Nullable String comment, Instant createdAt) {
         validateReview(rating, comment);
@@ -38,7 +37,7 @@ public class Review {
         }
     }
 
-    public boolean isTooOld(int seconds) {
+    public boolean isOlderThan(int seconds) {
         return Instant.now().getEpochSecond() - createdAt.getEpochSecond() > seconds;
     }
 

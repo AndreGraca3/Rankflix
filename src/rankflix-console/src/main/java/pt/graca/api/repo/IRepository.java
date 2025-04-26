@@ -13,6 +13,8 @@ public interface IRepository {
 
     void insertUser(User user);
 
+    void insertUserRange(List<User> users);
+
     void updateUser(User user);
 
     List<User> getAllUsers();
@@ -27,15 +29,17 @@ public interface IRepository {
 
     void insertMedia(Media media);
 
+    void insertMediaRange(List<Media> mediaItems);
+
     /**
      * Get all media sorted by rating
      *
-     * @param query  search query to filter media
+     * @param searchQuery  search query to filter media
      * @param userId user id to filter media by reviews
      * @param limit  limit of media to return
      * @return list of media sorted by global rating
      */
-    List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit);
+    List<Media> getAllSortedMedia(@Nullable String searchQuery, @Nullable UUID userId, @Nullable Integer limit);
 
     Media findMediaByTmdbId(int mediaTmdbId);
 

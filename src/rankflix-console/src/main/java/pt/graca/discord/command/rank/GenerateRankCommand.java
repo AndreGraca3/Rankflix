@@ -12,14 +12,11 @@ import pt.graca.discord.command.ICommand;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 import pt.graca.infra.generator.factory.RankGeneratorType;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class GenerateRankCommand implements ICommand {
 
@@ -59,14 +56,25 @@ public class GenerateRankCommand implements ICommand {
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
         var userOption = event.getOption("user");
-        var userId = userOption == null
+        var user = userOption == null
                 ? null
-                : rankflixService.findUserByDiscordId(userOption.getAsUser().getId()).id;
+                : rankflixService.findUserByDiscordId(userOption.getAsUser().getId());
 
-        RankedMedia rankedMedia = rankflixService.getTopRankedMedia(null, userId);
+        if (userOption != null && user == null) {
+            throw new NoSuchElementException("User not found");
+        }
 
-        if (rankedMedia.rankedMedia().isEmpty()) {
-            throw new IllegalStateException("Media list is empty for selected ranking");
+        RankedMedia rankedMedia = rankflixService.getTopRankedMedia(null, user != null ? user.id : null);
+
+        if (rankedMedia.media().isEmpty()) {
+            event.getHook()
+                    .sendMessageEmbeds(new EmbedBuilder()
+                            .setTitle("No media found for selected ranking")
+                            .setColor(Color.GRAY)
+                            .build())
+                    .queue();
+
+            return;
         }
 
         // get the generator type from the command

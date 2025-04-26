@@ -13,13 +13,9 @@ import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.repo.IRepository;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-
-import static com.mongodb.client.model.Indexes.ascending;
 
 public class MongoRepository implements IRepository {
 
@@ -32,7 +28,7 @@ public class MongoRepository implements IRepository {
 
         listsCollection.createIndex(new Document("name", 1), new IndexOptions().unique(true));
         listsCollection.createIndex(new Document("media.tmdbId", 1), new IndexOptions().unique(true).sparse(true));
-        listsCollection.createIndex(new Document("media.ratingSum", 1), new IndexOptions().sparse(true));
+        listsCollection.createIndex(new Document("media.averageRating", 1), new IndexOptions().sparse(true));
         listsCollection.createIndex(new Document("media.watchers.userId", 1), new IndexOptions().sparse(true));
 
         if (listsCollection.find(new Document("name", listName)).first() != null) return;
@@ -59,6 +55,18 @@ public class MongoRepository implements IRepository {
                         .append("username", user.username)
                         .append("_id", user.id.toString())
                         .append("discordId", user.discordId)
+                );
+    }
+
+    public void insertUserRange(List<User> users) {
+        database.getCollection("users")
+                .insertMany(session, users.stream()
+                        .map(user -> new Document()
+                                .append("username", user.username)
+                                .append("_id", user.id.toString())
+                                .append("discordId", user.discordId)
+                        )
+                        .toList()
                 );
     }
 
@@ -134,7 +142,7 @@ public class MongoRepository implements IRepository {
                         new Document("$push", new Document("media", new Document()
                                 .append("tmdbId", media.tmdbId)
                                 .append("title", media.title)
-                                .append("ratingSum", media.ratingSum)
+                                .append("averageRating", media.averageRating)
                                 .append("watchers", media.watchers.stream()
                                         .map(this::mapWatcherToDocument).toList())
                         ))
@@ -142,21 +150,42 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
-    public List<Media> getAllSortedMedia(@Nullable String query, @Nullable UUID userId, @Nullable Integer limit) {
+    public void insertMediaRange(List<Media> mediaItems) {
+        database.getCollection("lists")
+                .updateOne(session, new Document("name", listName),
+                        new Document("$push", new Document("media",
+                                new Document("$each", mediaItems.stream()
+                                        .map(media -> new Document()
+                                                .append("tmdbId", media.tmdbId)
+                                                .append("title", media.title)
+                                                .append("averageRating", media.averageRating)
+                                                .append("watchers", media.watchers.stream()
+                                                        .map(this::mapWatcherToDocument)
+                                                        .toList()
+                                                )
+                                        )
+                                        .toList()
+                                )
+                        ))
+                );
+    }
+
+    @Override
+    public List<Media> getAllSortedMedia(@Nullable String searchQuery, @Nullable UUID userId, @Nullable Integer limit) {
         List<Bson> pipeline = new ArrayList<>();
 
-        // Step 1: Match the list by name
+        // Match the list by name
         pipeline.add(Aggregates.match(Filters.eq("name", listName)));
 
-        // Step 2: Unwind the media array to process each element
+        // Unwind the media array to process each element
         pipeline.add(Aggregates.unwind("$media"));
 
-        // Step 3: Apply filter conditions inside the media array
+        // Apply filter conditions inside the media array
         List<Bson> mediaFilters = new ArrayList<>();
 
         // Title filter using regex
-        if (query != null && !query.isBlank()) {
-            mediaFilters.add(Filters.regex("media.title", query, "i"));
+        if (searchQuery != null && !searchQuery.isBlank()) {
+            mediaFilters.add(Filters.regex("media.title", searchQuery, "i"));
         }
 
         // Watchers filter based on userId and review
@@ -172,29 +201,18 @@ public class MongoRepository implements IRepository {
             pipeline.add(Aggregates.match(Filters.and(mediaFilters)));
         }
 
-        // Step 4: Calculate average rating
-        pipeline.add(Aggregates.addFields(
-                        new Field<>("averageRating",
-                                new Document("$cond", Arrays.asList(
-                                        new Document("$gt", Arrays.asList(new Document("$size", "$media.watchers"), 0)), // Check if there are watchers
-                                        new Document("$divide", Arrays.asList("$media.ratingSum", new Document("$size", "$media.watchers"))), // Calculate average
-                                        0 // Default to 0 if no watchers
-                                )))
-                )
-        );
-
-        // Step 5: Sort the media by average rating (descending order)
+        // Sort the media by average rating (descending order)
         pipeline.add(Aggregates.sort(Sorts.descending("averageRating")));
 
-        // Step 6: Limit the results if a limit is provided
+        // Limit the results if a limit is provided
         if (limit != null && limit > 0) {
             pipeline.add(Aggregates.limit(limit));
         }
 
-        // Step 7: Group back the media into lists after filtering
+        // Group back the media into lists after filtering
         pipeline.add(Aggregates.group("$_id", Accumulators.push("media", "$media")));
 
-        // Step 8: Project the media array and other necessary fields
+        // Project the media array and other necessary fields
         pipeline.add(Aggregates.project(Projections.include("media")));
 
         // Execute the aggregation pipeline
@@ -211,7 +229,7 @@ public class MongoRepository implements IRepository {
 
     @Override
     public Media findMediaByTmdbId(int mediaTmdbId) {
-       // filter and get media from array on db side using projection
+        // filter and get media from array on db side using projection
         var projection = Projections.elemMatch("media", Filters.eq("tmdbId", mediaTmdbId));
         var mediaDoc = database.getCollection("lists")
                 .find(session, new Document("name", listName))
@@ -228,7 +246,7 @@ public class MongoRepository implements IRepository {
                 .updateOne(session, new Document("name", listName)
                                 .append("media.tmdbId", media.tmdbId),
                         new Document("$set", new Document()
-                                .append("media.$.ratingSum", media.ratingSum)
+                                .append("media.$.averageRating", media.averageRating)
                                 .append("media.$.watchers", media.watchers.stream()
                                         .map(this::mapWatcherToDocument).toList()
                                 )
@@ -293,7 +311,7 @@ public class MongoRepository implements IRepository {
         return new Media(
                 doc.getInteger("tmdbId"),
                 doc.getString("title"),
-                doc.getDouble("ratingSum").floatValue(),
+                doc.getDouble("averageRating").floatValue(),
                 doc.getList("watchers", Document.class).stream()
                         .map(watcherDoc -> new MediaWatcher(
                                 UUID.fromString(watcherDoc.getString("userId")),
