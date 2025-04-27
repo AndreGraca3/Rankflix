@@ -28,18 +28,20 @@ abstract public class ConsoleMenu {
 
                 System.out.println();
                 System.out.print("Option: ");
-                int option = Integer.parseInt(scanner.nextLine());
+                int option;
+                try {
+                    option = Integer.parseInt(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    continue;
+                }
 
                 if (option == 0) break;
                 Method method = menuOptions.get(option);
                 if (method == null) throw new IllegalArgumentException("Invalid option");
 
                 method.invoke(this);
-                System.out.println("-".repeat(50));
-                System.out.println("Done!");
             } catch (Exception e) {
-                System.out.println("-".repeat(50));
-                System.out.println("Oops! An error occurred: " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 System.out.println("-".repeat(50));
             }

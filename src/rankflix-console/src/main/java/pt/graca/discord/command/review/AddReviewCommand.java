@@ -4,14 +4,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.api.service.exceptions.review.ReviewAlreadyExistsException;
-import pt.graca.api.service.results.MediaRatingUpdateResult;
-import pt.graca.discord.command.Consts;
-import pt.graca.discord.command.ICommand;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.media.MediaNotFoundException;
+import pt.graca.api.service.results.MediaRatingUpdateResult;
+import pt.graca.discord.command.Consts;
 import pt.graca.discord.command.Consts.MEDIA_NAME_OPTION;
+import pt.graca.discord.command.ICommand;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -70,12 +69,7 @@ public class AddReviewCommand implements ICommand {
             user = service.createDiscordUser(discordUser.getId(), discordUser.getName());
         }
 
-        MediaRatingUpdateResult ratingUpdate;
-        try {
-            ratingUpdate = service.addReview(user.id, mediaTmdbId, rating, comment);
-        } catch (ReviewAlreadyExistsException e) {
-            ratingUpdate = service.updateReview(user.id, mediaTmdbId, rating, comment);
-        }
+        MediaRatingUpdateResult ratingUpdate = service.upsertReview(user.id, mediaTmdbId, rating, comment);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
                 .setAuthor("| Review added", null, discordUser.getAvatarUrl())

@@ -17,7 +17,7 @@ public interface IRepository {
 
     void updateUser(User user);
 
-    List<User> getAllUsers();
+    List<User> getAllUsers(@Nullable List<UUID> userIds);
 
     User findUserByUsername(String username);
 

@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu;
 import pt.graca.api.domain.media.MediaType;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.results.MediaDetails;
@@ -30,7 +29,7 @@ public abstract class AddMediaCommand {
             throw new IllegalAccessException("You must be an administrator to use this command");
         }
 
-        MediaDetails mediaDetails = service.addMedia(mediaTmdbId);
+        MediaDetails mediaDetails = service.getMediaDetailsByTmdbId(mediaTmdbId);
 
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setTitle(mediaDetails.title.substring(0, Math.min(mediaDetails.title.length(), 256)))
@@ -58,29 +57,18 @@ public abstract class AddMediaCommand {
             default -> throw new IllegalStateException("Unexpected value: " + mediaDetails);
         }
 
-        event.getHook().sendMessageEmbeds(embedBuilder.build()).addActionRow(
-                Button.link("https://www.imdb.com/title/"
-                        + mediaDetails.ids.imdbId(), "IMDB"),
-                Button.link("https://www.themoviedb.org/"
-                        + (mediaDetails.type == MediaType.MOVIE
-                        ? "movie/" : "tv/") + mediaDetails.ids.tmdbId(), "TMDB")
-        ).queue();
-
-        EntitySelectMenu selectMenu = EntitySelectMenu.create(
-                        "add-media-users-select:" + mediaDetails.ids.tmdbId(),
-                        EntitySelectMenu.SelectTarget.USER
+        event.getHook().sendMessageEmbeds(embedBuilder.build())
+                .addActionRow(
+                        Button.link("https://www.imdb.com/title/"
+                                + mediaDetails.ids.imdbId(), "IMDB"),
+                        Button.link("https://www.themoviedb.org/"
+                                + (mediaDetails.type == MediaType.MOVIE
+                                ? "movie/" : "tv/") + mediaDetails.ids.tmdbId(), "TMDB")
                 )
-                .setMaxValues(25) // Discord limit
-                .setPlaceholder("Pick users who watched it")
-                .build();
-
-        event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                        .setTitle("Who watched this?")
-                        .setDescription("Allow users to rate this media")
-                        .setColor(Color.MAGENTA)
-                        .build())
-                .addActionRow(selectMenu)
-                .setEphemeral(true)
+                .addActionRow(
+                        Button.success("confirm-media:" + mediaTmdbId, "✅"),
+                        Button.danger("ignore-media", "❌")
+                )
                 .queue();
     }
 

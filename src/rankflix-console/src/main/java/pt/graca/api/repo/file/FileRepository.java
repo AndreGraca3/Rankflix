@@ -62,8 +62,11 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return rankflixList.users;
+    public List<User> getAllUsers(List<UUID> userIds) {
+        if (userIds == null) {
+            return rankflixList.users;
+        }
+        return rankflixList.users.stream().filter(user -> userIds.contains(user.id)).toList();
     }
 
     @Override

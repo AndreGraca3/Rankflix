@@ -104,7 +104,7 @@ public class CheckReviewsCommand implements ICommand {
                         throw new RuntimeException(e);
                     }
                     return String.format("%s => %s",
-                            "<@" + user.discordId + ">", w.review != null ? w.review.rating : "Not rated"
+                            "<@" + user.discordId + ">", w.review != null ? w.review.rating : "Unrated"
                     );
                 })
                 .reduce("", (a, b) -> a + "\n" + b);

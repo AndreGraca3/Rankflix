@@ -7,6 +7,8 @@ import pt.graca.api.service.exceptions.review.InvalidRatingException;
 import pt.graca.infra.excel.ExcelImportResult;
 import pt.graca.infra.excel.ExcelService;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.UUID;
@@ -30,7 +32,7 @@ public class RankflixMenuService extends ConsoleMenu {
     @ConsoleMenuOption("List all users")
     public void listUsers() throws Exception {
         System.out.println("Id | Username | Discord Id");
-        service.getAllUsers().forEach(user -> System.out.println(user.id + " | " + user.username + " | " + user.discordId));
+        service.getAllUsers(null).forEach(user -> System.out.println(user.id + " | " + user.username + " | " + user.discordId));
     }
 
     @ConsoleMenuOption("Update user")
@@ -55,7 +57,7 @@ public class RankflixMenuService extends ConsoleMenu {
 
         String rating = read("Enter the averageRating: ");
         try {
-            service.addReview(user.id, Integer.parseInt(mediaTmdbId), Float.parseFloat(rating), null);
+            service.upsertReview(user.id, Integer.parseInt(mediaTmdbId), Float.parseFloat(rating), null);
         } catch (NumberFormatException e) {
             throw new InvalidRatingException(rating);
         }
@@ -69,7 +71,7 @@ public class RankflixMenuService extends ConsoleMenu {
 
         int mediaTmdbId = Integer.parseInt(read("Enter the media's TMDB id: "));
 
-        service.forceDeleteReview(mediaTmdbId, user.id);
+        service.deleteReviewAdmin(mediaTmdbId, user.id);
     }
 
     @ConsoleMenuOption("Import from Excel (delete everything first)")
@@ -83,6 +85,20 @@ public class RankflixMenuService extends ConsoleMenu {
 
         System.out.println("Importing, this may take a while...");
         service.importMediasWithWatchersRange(importedExcelRes.importedMedia(), importedExcelRes.importedUsers());
+    }
+
+    @ConsoleMenuOption("Export to Excel")
+    public void exportToExcel() throws Exception {
+        String path = read("Enter the path to the Excel file: ");
+
+        var media = service.getAllMedia(null, null);
+        var users = service.getAllUsers(media.stream().map(m -> m.watchers).flatMap(Collection::stream).map(w -> w.userId).distinct().toList());
+
+        System.out.println("Exporting...");
+        try (var workbook = ExcelService.generateWorkbook(media, users)) {
+            var fileName = "rankflix-".concat(String.valueOf(System.currentTimeMillis())).concat(".xlsx");
+            ExcelService.saveFile(workbook, path.concat(File.separator).concat(fileName).replace("\"", ""));
+        }
     }
 
     @ConsoleMenuOption("Reset")

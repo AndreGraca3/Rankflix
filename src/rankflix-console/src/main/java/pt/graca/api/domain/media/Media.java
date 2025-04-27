@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import pt.graca.api.domain.Review;
 import pt.graca.api.service.exceptions.review.UnauthorizedReviewException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -14,16 +15,37 @@ public class Media {
     public final String title;
     public final float averageRating;
     public final List<MediaWatcher> watchers;
-
-    public Media(int tmdbId, String title) {
-        this(tmdbId, title, 0, new ArrayList<>());
-    }
+    public final Instant createdAt;
+    public boolean isImported = false;
 
     public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers) {
         this.tmdbId = tmdbId;
         this.title = title;
         this.averageRating = averageRating;
         this.watchers = watchers;
+        this.createdAt = Instant.now();
+    }
+
+    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers, boolean isImported) {
+        this.tmdbId = tmdbId;
+        this.title = title;
+        this.averageRating = averageRating;
+        this.watchers = watchers;
+        this.createdAt = Instant.now();
+        this.isImported = isImported;
+    }
+
+    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers, Instant createdAt, boolean isImported) {
+        this.tmdbId = tmdbId;
+        this.title = title;
+        this.averageRating = averageRating;
+        this.watchers = watchers;
+        this.createdAt = createdAt;
+        this.isImported = isImported;
+    }
+
+    public Media(int tmdbId, String title) {
+        this(tmdbId, title, 0, new ArrayList<>());
     }
 
     public @Nullable MediaWatcher getWatcherByUserId(UUID userId) {
@@ -45,7 +67,7 @@ public class Media {
         List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
         newWatchers.add(new MediaWatcher(userId, null));
 
-        return new Media(this.tmdbId, this.title, this.averageRating, newWatchers);
+        return new Media(this.tmdbId, this.title, this.averageRating, newWatchers, this.createdAt, this.isImported);
     }
 
     public List<Review> getReviews() {
@@ -100,7 +122,7 @@ public class Media {
 
         float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
 
-        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers);
+        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
     }
 
     public Media removeReview(UUID userId) {
@@ -126,6 +148,10 @@ public class Media {
 
         float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
 
-        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers);
+        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
+    }
+
+    public boolean isOlderThan(int seconds) {
+        return Instant.now().getEpochSecond() - createdAt.getEpochSecond() > seconds;
     }
 }

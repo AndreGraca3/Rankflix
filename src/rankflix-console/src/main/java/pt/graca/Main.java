@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Welcome to Administrator Rankflix console app :)");
+        System.out.println("Welcome to Rankflix console app :)");
         try {
             var properties = new Properties();
             properties.load(Main.class.getClassLoader().getResourceAsStream("version.properties"));

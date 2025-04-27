@@ -5,10 +5,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import pt.graca.api.service.RankflixService;
 import pt.graca.discord.command.CommandManager;
-import pt.graca.discord.command.media.AddMediaBySearchCommand;
-import pt.graca.discord.command.media.AddMediaByTmdbIdCommand;
-import pt.graca.discord.command.media.AddMediaUserSelectorListener;
-import pt.graca.discord.command.media.DeleteMediaCommand;
+import pt.graca.discord.command.media.*;
+import pt.graca.discord.command.rank.ExportListCommand;
 import pt.graca.discord.command.rank.GenerateRankCommand;
 import pt.graca.discord.command.review.AddReviewCommand;
 import pt.graca.discord.command.review.CheckReviewsCommand;
@@ -16,6 +14,7 @@ import pt.graca.discord.command.review.DeleteReviewCommand;
 import pt.graca.discord.listeners.AutoCompleteManager;
 import pt.graca.discord.listeners.MediaNameAutoComplete;
 import pt.graca.discord.listeners.MediaQueryAutoComplete;
+import pt.graca.infra.exporters.ExcelExporter;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 
 public class DiscordBotService {
@@ -40,6 +39,7 @@ public class DiscordBotService {
         commandManager.add(new AddReviewCommand(rankflixService));
         commandManager.add(new DeleteReviewCommand(rankflixService));
         commandManager.add(new GenerateRankCommand(rankflixService, rankGeneratorFactory));
+        commandManager.add(new ExportListCommand(rankflixService, new ExcelExporter()));
 
         var autoCompletes = new AutoCompleteManager();
         autoCompletes.add(new MediaQueryAutoComplete(rankflixService));
@@ -50,7 +50,8 @@ public class DiscordBotService {
                 .addEventListeners(
                         commandManager,
                         autoCompletes,
-                        new AddMediaUserSelectorListener(rankflixService)
+                        new AddMediaUserSelectorListener(rankflixService),
+                        new ConfirmMediaButtonListener(rankflixService)
                 );
 
         // try to set the activity to the current list name

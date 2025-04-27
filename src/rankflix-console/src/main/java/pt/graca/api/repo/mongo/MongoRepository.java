@@ -71,13 +71,17 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return database.getCollection("users")
-                .find(session)
-                .map(document -> new User(
-                        UUID.fromString(document.getString("_id")),
-                        document.getString("discordId"),
-                        document.getString("username")
+    public List<User> getAllUsers(List<UUID> ids) {
+        var collection = database.getCollection("users");
+        var filter = (ids == null)
+                ? new Document()
+                : new Document("_id", new Document("$in", ids.stream().map(UUID::toString).toList()));
+
+        return collection.find(session, filter)
+                .map(doc -> new User(
+                        UUID.fromString(doc.getString("_id")),
+                        doc.getString("discordId"),
+                        doc.getString("username")
                 ))
                 .into(new ArrayList<>());
     }
@@ -143,8 +147,9 @@ public class MongoRepository implements IRepository {
                                 .append("tmdbId", media.tmdbId)
                                 .append("title", media.title)
                                 .append("averageRating", media.averageRating)
-                                .append("watchers", media.watchers.stream()
-                                        .map(this::mapWatcherToDocument).toList())
+                                .append("watchers", media.watchers.stream().map(this::mapWatcherToDocument).toList())
+                                .append("createdAt", media.createdAt)
+                                .append("isImported", media.isImported)
                         ))
                 );
     }
@@ -163,6 +168,8 @@ public class MongoRepository implements IRepository {
                                                         .map(this::mapWatcherToDocument)
                                                         .toList()
                                                 )
+                                                .append("createdAt", media.createdAt)
+                                                .append("isImported", media.isImported)
                                         )
                                         .toList()
                                 )
@@ -299,13 +306,13 @@ public class MongoRepository implements IRepository {
         return new Document()
                 .append("userId", watcher.userId.toString())
                 .append("review", watcher.review != null ? new Document()
-                        .append("value", watcher.review.rating)
+                        .append("rating", String.valueOf(watcher.review.rating))
                         .append("comment", watcher.review.comment)
                         .append("createdAt", watcher.review.createdAt)
                         : null);
     }
 
-    // helper method to map a document to object
+    // helper methods to map a document to object
 
     private Media mapDocumentToMedia(Document doc) {
         return new Media(
@@ -318,13 +325,15 @@ public class MongoRepository implements IRepository {
                                 watcherDoc.get("review", Document.class) == null
                                         ? null
                                         : mapDocumentToReview(watcherDoc.get("review", Document.class))
-                        )).toList()
+                        )).toList(),
+                doc.getDate("createdAt").toInstant(),
+                doc.getBoolean("isImported")
         );
     }
 
     private Review mapDocumentToReview(Document doc) {
         return new Review(
-                doc.getDouble("value").floatValue(),
+                Float.parseFloat(doc.getString("rating")),
                 doc.getString("comment"),
                 doc.getDate("createdAt").toInstant()
         );

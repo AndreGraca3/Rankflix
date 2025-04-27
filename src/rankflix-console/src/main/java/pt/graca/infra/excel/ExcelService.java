@@ -10,6 +10,9 @@ import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,8 +28,8 @@ public class ExcelService {
     private static final int MEDIA_IDS_COLUMN_IDX = getColumnIdx('C');
     private static final int MEDIA_TITLES_COLUMN_IDX = getColumnIdx('D');
 
-    public static ExcelImportResult importMedia(String location) throws Exception {
-        FileInputStream file = new FileInputStream(location);
+    public static ExcelImportResult importMedia(String fileLocation) throws IOException {
+        FileInputStream file = new FileInputStream(fileLocation);
         Workbook workbook = new XSSFWorkbook(file);
         Sheet sheet = workbook.getSheetAt(0);
 
@@ -75,11 +78,106 @@ public class ExcelService {
 
             var averageRating = (float) row.getCell(averageRateColumnIdx).getNumericCellValue();
 
-            var media = new Media(mediaId, title, averageRating, watchers);
+            var media = new Media(mediaId, title, averageRating, watchers, true);
             mediaList.add(media);
         }
 
         return new ExcelImportResult(mediaList, columnIdxToUser.values().stream().toList());
+    }
+
+    public static Workbook generateWorkbook(List<Media> mediaList, List<User> users) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Media");
+
+        // Create header rows
+        Row userDiscordIdsRow = sheet.createRow(USER_DISCORD_IDS_ROW_IDX);
+        Row usernamesRow = sheet.createRow(USER_USERNAMES_ROW_IDX);
+
+        int usersCount = users.size();
+        int averageRateColumnIdx = FIRST_USER_RATE_COLUMN_IDX + usersCount;
+
+        // Create basic cell styles
+        CellStyle defaultStyle = workbook.createCellStyle();
+        defaultStyle.setAlignment(HorizontalAlignment.CENTER);
+        defaultStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        defaultStyle.setBorderTop(BorderStyle.THIN);
+        defaultStyle.setBorderBottom(BorderStyle.THIN);
+        defaultStyle.setBorderLeft(BorderStyle.THIN);
+        defaultStyle.setBorderRight(BorderStyle.THIN);
+        defaultStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
+
+        CellStyle redStyle = workbook.createCellStyle();
+        redStyle.cloneStyleFrom(defaultStyle);
+        redStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
+        redStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle yellowStyle = workbook.createCellStyle();
+        yellowStyle.cloneStyleFrom(defaultStyle);
+        yellowStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+        yellowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        // Write Discord IDs and usernames
+        for (int i = 0; i < usersCount; i++) {
+            User user = users.get(i);
+            int colIdx = FIRST_USER_RATE_COLUMN_IDX + i;
+
+            Cell discordIdCell = userDiscordIdsRow.createCell(colIdx);
+            discordIdCell.setCellValue(user.discordId);
+            discordIdCell.setCellStyle(defaultStyle);
+
+            Cell usernameCell = usernamesRow.createCell(colIdx);
+            usernameCell.setCellValue(user.username);
+            usernameCell.setCellStyle(defaultStyle);
+        }
+
+        // Write media rows
+        int rowIdx = FIRST_MEDIA_ROW_IDX;
+        for (Media media : mediaList) {
+            Row row = sheet.createRow(rowIdx++);
+
+            Cell idCell = row.createCell(MEDIA_IDS_COLUMN_IDX);
+            idCell.setCellValue(media.tmdbId);
+            idCell.setCellStyle(defaultStyle);
+
+            Cell titleCell = row.createCell(MEDIA_TITLES_COLUMN_IDX);
+            titleCell.setCellValue(media.title);
+            titleCell.setCellStyle(defaultStyle);
+
+            for (int i = 0; i < usersCount; i++) {
+                User user = users.get(i);
+                MediaWatcher watcher = media.getWatcherByUserId(user.id);
+
+                Cell cell = row.createCell(FIRST_USER_RATE_COLUMN_IDX + i);
+
+                if (watcher == null) {
+                    cell.setCellStyle(redStyle);
+                } else if (watcher.review != null) {
+                    cell.setCellValue(watcher.review.rating);
+                    cell.setCellStyle(defaultStyle);
+                } else {
+                    cell.setCellStyle(yellowStyle);
+                }
+            }
+
+            // Average rating
+            Cell avgCell = row.createCell(averageRateColumnIdx);
+            avgCell.setCellValue(media.averageRating);
+            avgCell.setCellStyle(defaultStyle);
+        }
+
+        // Autosize columns
+        int totalColumns = averageRateColumnIdx + 1;
+        for (int i = 0; i < totalColumns; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        return workbook;
+    }
+
+    public static void saveFile(Workbook workbook, String fileLocation) throws IOException {
+        try (OutputStream outputStream = new FileOutputStream(fileLocation)) {
+            workbook.write(outputStream);
+        }
     }
 
     private static boolean isYellowBackground(Cell cell) {

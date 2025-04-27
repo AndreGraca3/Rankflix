@@ -14,7 +14,18 @@ public abstract class RankGenerator {
                 .reduce("", (a, b) -> a + b + "\n");
     }
 
+
     protected String generateTextLine(int position, RatedMedia media) {
-        return position + " - " + media.title() + " (" + String.format("%.2f", media.rating()) + ")";
+        String title = media.title();
+        String rating = String.format("%.2f", media.rating());
+
+        // Calculate available space for the title based on the length of the rating
+        int maxTitleLength = 30 - (rating.length() + 5); // 5 spaces for the " (" and the closing parenthesis
+        if (title.length() > maxTitleLength) {
+            // Truncate title to fit space for the rating
+            title = title.substring(0, maxTitleLength - 3) + "...";
+        }
+
+        return position + " - " + title + " (" + rating + ")";
     }
 }

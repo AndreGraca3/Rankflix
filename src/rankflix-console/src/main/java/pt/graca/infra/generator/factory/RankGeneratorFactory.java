@@ -1,12 +1,14 @@
 package pt.graca.infra.generator.factory;
 
+import pt.graca.infra.exporters.ExcelExporter;
+import pt.graca.infra.generator.RankGenerator;
 import pt.graca.infra.generator.core.CanvasGenerator;
 import pt.graca.infra.generator.core.ChartGenerator;
-import pt.graca.infra.generator.RankGenerator;
 import pt.graca.infra.generator.core.GistGenerator;
 import pt.graca.infra.gson.GsonSingleton;
 
 public class RankGeneratorFactory {
+    private ExcelExporter excelExporter;
     private CanvasGenerator canvasGenerator;
     private ChartGenerator chartGenerator;
     private GistGenerator gistGenerator;
