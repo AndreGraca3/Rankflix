@@ -2,13 +2,12 @@ package pt.graca.discord.command.media;
 
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import pt.graca.api.service.RankflixService;
 import pt.graca.discord.command.Consts.MEDIA_NAME_OPTION;
 import pt.graca.discord.command.ICommand;
-import pt.graca.api.service.RankflixService;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -35,23 +34,21 @@ public class DeleteMediaCommand implements ICommand {
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.INTEGER,
+        options.add(new OptionData(OptionType.STRING,
                 MEDIA_NAME_OPTION.NAME, MEDIA_NAME_OPTION.DESCRIPTION, true, true));
         return options;
     }
 
     @Override
+    public boolean isAdminCommand() {
+        return true;
+    }
+
+    @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        var member = event.getMember();
+        String mediaId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsString(); // this is the internal id labeled as MEDIA_NAME_OPTION.NAME
 
-        if (member == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
-            throw new IllegalAccessException("You must be an administrator to use this command");
-        }
-
-        int mediaTmdbId =
-                event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // this is the tmdbId labeled as name
-
-        var deletedMedia = service.removeMediaFromRanking(mediaTmdbId);
+        var deletedMedia = service.removeMediaFromRanking(mediaId);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
                 .setTitle(deletedMedia.title + " has been deleted from the list")

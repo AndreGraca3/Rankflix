@@ -32,7 +32,7 @@ public class DiscordBotService {
         System.out.println("Starting Discord bot...");
 
         var commandManager = new CommandManager();
-        commandManager.add(new AddMediaByTmdbIdCommand(rankflixService));
+        commandManager.add(new AddMediaByIdCommand(rankflixService));
         commandManager.add(new AddMediaBySearchCommand(rankflixService));
         commandManager.add(new DeleteMediaCommand(rankflixService));
         commandManager.add(new CheckReviewsCommand(rankflixService));

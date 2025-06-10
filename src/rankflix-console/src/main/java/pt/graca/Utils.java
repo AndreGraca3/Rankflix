@@ -4,12 +4,14 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Locale;
 
 public class Utils {
     public static String encodePngImage(BufferedImage image) {
@@ -35,6 +37,32 @@ public class Utils {
         return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    public static String formatSecondsToTime(int totalSeconds) {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+
+        StringBuilder result = new StringBuilder();
+
+        if (hours > 0) {
+            result.append(hours).append(" hours");
+        }
+        if (minutes > 0) {
+            if (!result.isEmpty()) result.append(" and ");
+            result.append(minutes).append(" minutes");
+        }
+        if (seconds > 0) {
+            if (!result.isEmpty()) result.append(" and ");
+            result.append(seconds).append(" seconds");
+        }
+
+        if (result.isEmpty()) {
+            result.append("0 seconds");
+        }
+
+        return result.toString();
+    }
+
     public static String getUserHomePath() {
         String os = System.getProperty("os.name").toLowerCase();
 
@@ -51,5 +79,12 @@ public class Utils {
             // Default to user home directory if OS is unrecognized
             return System.getProperty("user.home");
         }
+    }
+
+    public static String parseCurrency(Integer value) {
+        if (value == null || value == 0) {
+            return "Unknown";
+        }
+        return NumberFormat.getCurrencyInstance(Locale.US).format(value);
     }
 }

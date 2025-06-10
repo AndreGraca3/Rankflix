@@ -1,7 +1,7 @@
 package pt.graca;
 
 import pt.graca.api.repo.factory.MongoTransactionManagerFactory;
-import pt.graca.api.service.external.content.TmdbProvider;
+import pt.graca.infra.content.TmdbProvider;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 import pt.graca.menu.MainMenuService;
 

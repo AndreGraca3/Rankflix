@@ -42,7 +42,7 @@ public class CheckReviewsCommand implements ICommand {
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.INTEGER,
+        options.add(new OptionData(OptionType.STRING,
                 Consts.MEDIA_NAME_OPTION.NAME, Consts.MEDIA_NAME_OPTION.DESCRIPTION, true, true));
 
         options.add(new OptionData(OptionType.USER, "user", "The user who owns the review", false));
@@ -51,13 +51,13 @@ public class CheckReviewsCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId = event.getOption(Consts.MEDIA_NAME_OPTION.NAME).getAsInt(); // This is movieId as value labeled as name
+        String mediaId = event.getOption(Consts.MEDIA_NAME_OPTION.NAME).getAsString(); // This is mediaId as value labeled as MEDIA_NAME_OPTION.NAME
 
         var discordUser = event.getOption("user") == null
                 ? null : event.getOption("user").getAsUser();
 
-        var mediaFuture = executor.submit(() -> service.findRankedMediaByTmdbId(mediaTmdbId));
-        var mediaDetailsFuture = executor.submit(() -> service.getMediaDetailsByTmdbId(mediaTmdbId));
+        var mediaFuture = executor.submit(() -> service.findRankedMediaById(mediaId));
+        var mediaDetailsFuture = executor.submit(() -> service.getMediaDetailsById(mediaId));
 
         Media media = mediaFuture.get();
         MediaDetails mediaDetails = mediaDetailsFuture.get();
@@ -70,11 +70,11 @@ public class CheckReviewsCommand implements ICommand {
         }
     }
 
-    private void checkReviewForUser(SlashCommandInteractionEvent event,
-                                    net.dv8tion.jda.api.entities.User discordUser,
-                                    Media media,
-                                    MediaDetails mediaDetails
-    ) throws Exception {
+    private void checkReviewForUser(
+            SlashCommandInteractionEvent event,
+            net.dv8tion.jda.api.entities.User discordUser,
+            Media media,
+            MediaDetails mediaDetails) throws Exception {
         User user = service.findUserByDiscordId(discordUser.getId());
         if (user == null) throw new NoSuchElementException("User not found");
 
@@ -84,7 +84,7 @@ public class CheckReviewsCommand implements ICommand {
         }
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                .setAuthor(media.title, null, discordUser.getAvatarUrl())
+                .setAuthor(media.title, null, discordUser.getEffectiveAvatarUrl())
                 .setThumbnail(mediaDetails.posterUrl)
                 .setDescription(review.comment)
                 .setColor(Color.ORANGE)
@@ -109,15 +109,21 @@ public class CheckReviewsCommand implements ICommand {
                 })
                 .reduce("", (a, b) -> a + "\n" + b);
 
-        event.getHook().sendMessageEmbeds(new EmbedBuilder()
+        EmbedBuilder embed = new EmbedBuilder()
                 .setTitle(mediaDetails.title)
                 .setDescription(userRatingsString)
                 .setThumbnail(mediaDetails.posterUrl)
                 .setColor(Color.ORANGE)
                 .addField("List's rating", String.valueOf(media.averageRating), true)
-                .addField("Global rating", String.valueOf(mediaDetails.globalRating), true)
-                .addField("Release Date", Utils.localDateToString(mediaDetails.releaseDate), true)
-                .build()
-        ).queue();
+                .addField("Global rating",
+                        String.valueOf(mediaDetails.globalRating),
+                        true)
+                .addField("Release Date",
+                        Utils.localDateToString(mediaDetails.releaseDate),
+                        true)
+                .addField("Imported", String.valueOf(media.isImported), true)
+                .addField("Added At", Utils.instantToString(media.createdAt), true);
+
+        event.getHook().sendMessageEmbeds(embed.build()).queue();
     }
 }

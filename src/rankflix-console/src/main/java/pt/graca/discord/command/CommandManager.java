@@ -39,12 +39,16 @@ public class CommandManager extends ListenerAdapter {
         for (ICommand command : commands) {
             if (command.getName().equals(event.getName())) {
                 try {
-                    if(event.getUser().isBot()) return;
+                    if (event.getUser().isBot()) return;
                     event.deferReply().queue();
+                    command.checkPermission(event); // throws IllegalAccessException
                     command.execute(event);
                     break;
                 } catch (Exception e) {
-                    if (!(e instanceof RankflixException)) e.printStackTrace();
+                    if (!(e instanceof RankflixException) && !(e instanceof IllegalAccessException)) {
+                        e.printStackTrace();
+                    }
+
                     event.getHook().sendMessageEmbeds(new EmbedBuilder()
                                     .setTitle("Error")
                                     .setDescription(e.getMessage() != null ? e.getMessage() : "Internal error")

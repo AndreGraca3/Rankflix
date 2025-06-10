@@ -48,14 +48,13 @@ public class ExcelService {
             columnIdxToUser.put(i, new User(discordId, username));
         }
 
-        var mediaCount = sheet.getLastRowNum() - FIRST_MEDIA_ROW_IDX;
         List<Media> mediaList = new ArrayList<>();
 
-        for (int i = FIRST_MEDIA_ROW_IDX; i <= mediaCount - 1; i++) {
+        for (int i = FIRST_MEDIA_ROW_IDX; i <= sheet.getLastRowNum() - 1; i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            int mediaId = (int) row.getCell(MEDIA_IDS_COLUMN_IDX).getNumericCellValue();
+            String mediaId = row.getCell(MEDIA_IDS_COLUMN_IDX).getStringCellValue();
             String title = row.getCell(MEDIA_TITLES_COLUMN_IDX).getStringCellValue();
 
             List<MediaWatcher> watchers = new ArrayList<>();
@@ -136,7 +135,7 @@ public class ExcelService {
             Row row = sheet.createRow(rowIdx++);
 
             Cell idCell = row.createCell(MEDIA_IDS_COLUMN_IDX);
-            idCell.setCellValue(media.tmdbId);
+            idCell.setCellValue(media.id);
             idCell.setCellStyle(defaultStyle);
 
             Cell titleCell = row.createCell(MEDIA_TITLES_COLUMN_IDX);
@@ -169,6 +168,32 @@ public class ExcelService {
         int totalColumns = averageRateColumnIdx + 1;
         for (int i = 0; i < totalColumns; i++) {
             sheet.autoSizeColumn(i);
+        }
+
+        // Add row below the last media to write user averages
+        Row avgRow = sheet.createRow(rowIdx);
+
+        for (int i = 0; i < usersCount; i++) {
+            User user = users.get(i);
+            int colIdx = FIRST_USER_RATE_COLUMN_IDX + i;
+
+            // Collect all ratings given by this user
+            double total = 0;
+            int count = 0;
+
+            for (Media media : mediaList) {
+                MediaWatcher watcher = media.getWatcherByUserId(user.id);
+                if (watcher != null && watcher.review != null) {
+                    total += watcher.review.rating;
+                    count++;
+                }
+            }
+
+            double average = count > 0 ? total / count : 0;
+
+            Cell avgCell = avgRow.createCell(colIdx);
+            avgCell.setCellValue(average);
+            avgCell.setCellStyle(defaultStyle);
         }
 
         return workbook;

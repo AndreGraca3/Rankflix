@@ -27,7 +27,7 @@ public class MongoRepository implements IRepository {
         MongoCollection<Document> listsCollection = database.getCollection("lists");
 
         listsCollection.createIndex(new Document("name", 1), new IndexOptions().unique(true));
-        listsCollection.createIndex(new Document("media.tmdbId", 1), new IndexOptions().unique(true).sparse(true));
+        listsCollection.createIndex(new Document("media.id", 1), new IndexOptions().unique(true).sparse(true));
         listsCollection.createIndex(new Document("media.averageRating", 1), new IndexOptions().sparse(true));
         listsCollection.createIndex(new Document("media.watchers.userId", 1), new IndexOptions().sparse(true));
 
@@ -144,7 +144,7 @@ public class MongoRepository implements IRepository {
         database.getCollection("lists")
                 .updateOne(session, new Document("name", listName),
                         new Document("$push", new Document("media", new Document()
-                                .append("tmdbId", media.tmdbId)
+                                .append("id", media.id)
                                 .append("title", media.title)
                                 .append("averageRating", media.averageRating)
                                 .append("watchers", media.watchers.stream().map(this::mapWatcherToDocument).toList())
@@ -161,7 +161,7 @@ public class MongoRepository implements IRepository {
                         new Document("$push", new Document("media",
                                 new Document("$each", mediaItems.stream()
                                         .map(media -> new Document()
-                                                .append("tmdbId", media.tmdbId)
+                                                .append("id", media.id)
                                                 .append("title", media.title)
                                                 .append("averageRating", media.averageRating)
                                                 .append("watchers", media.watchers.stream()
@@ -235,9 +235,9 @@ public class MongoRepository implements IRepository {
     }
 
     @Override
-    public Media findMediaByTmdbId(int mediaTmdbId) {
+    public Media findMediaById(String mediaId) {
         // filter and get media from array on db side using projection
-        var projection = Projections.elemMatch("media", Filters.eq("tmdbId", mediaTmdbId));
+        var projection = Projections.elemMatch("media", Filters.eq("id", mediaId));
         var mediaDoc = database.getCollection("lists")
                 .find(session, new Document("name", listName))
                 .projection(projection)
@@ -251,7 +251,7 @@ public class MongoRepository implements IRepository {
     public void updateMedia(Media media) {
         database.getCollection("lists")
                 .updateOne(session, new Document("name", listName)
-                                .append("media.tmdbId", media.tmdbId),
+                                .append("media.id", media.id),
                         new Document("$set", new Document()
                                 .append("media.$.averageRating", media.averageRating)
                                 .append("media.$.watchers", media.watchers.stream()
@@ -265,15 +265,15 @@ public class MongoRepository implements IRepository {
     public void deleteMedia(Media media) {
         database.getCollection("lists")
                 .updateOne(session, new Document("name", listName),
-                        new Document("$pull", new Document("media", new Document("tmdbId", media.tmdbId)))
+                        new Document("$pull", new Document("media", new Document("id", media.id)))
                 );
     }
 
     @Override
-    public MediaWatcher findWatcher(UUID userId, int mediaTmdbId) {
+    public MediaWatcher findWatcher(UUID userId, String mediaId) {
         List<Bson> filters = new ArrayList<>();
         filters.add(Filters.eq("name", listName));
-        filters.add(Filters.eq("media.tmdbId", mediaTmdbId));
+        filters.add(Filters.eq("media.id", mediaId));
         filters.add(Filters.eq("media.watchers.userId", userId.toString()));
 
         Bson combinedFilter = Filters.and(filters);
@@ -316,7 +316,7 @@ public class MongoRepository implements IRepository {
 
     private Media mapDocumentToMedia(Document doc) {
         return new Media(
-                doc.getInteger("tmdbId"),
+                doc.getString("id"),
                 doc.getString("title"),
                 doc.getDouble("averageRating").floatValue(),
                 doc.getList("watchers", Document.class).stream()

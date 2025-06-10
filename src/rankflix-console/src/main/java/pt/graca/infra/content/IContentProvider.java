@@ -1,4 +1,4 @@
-package pt.graca.api.service.external.content;
+package pt.graca.infra.content;
 
 import org.jetbrains.annotations.Nullable;
 import pt.graca.api.service.results.MediaDetails;
@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface IContentProvider {
     @Nullable
-    MediaDetails getMediaDetailsById(int id);
+    MediaDetails getMediaDetailsById(String mediaId);
 
     List<MediaDetailsItem> searchMediaByName(String query, int page);
 }

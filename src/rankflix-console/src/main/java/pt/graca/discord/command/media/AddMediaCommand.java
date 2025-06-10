@@ -1,7 +1,6 @@
 package pt.graca.discord.command.media;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import pt.graca.api.domain.media.MediaType;
@@ -9,27 +8,29 @@ import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.results.MediaDetails;
 import pt.graca.api.service.results.MovieDetails;
 import pt.graca.api.service.results.TvShowDetails;
+import pt.graca.discord.command.ICommand;
 
 import java.awt.*;
-import java.text.NumberFormat;
-import java.util.Locale;
 
-public abstract class AddMediaCommand {
+import static pt.graca.Utils.parseCurrency;
+
+public abstract class AddMediaCommand implements ICommand {
 
     public AddMediaCommand(RankflixService service) {
         this.service = service;
     }
 
+    @Override
+    public boolean isAdminCommand() {
+        return true;
+    }
+
+    ;
+
     protected final RankflixService service;
 
-    public void addMedia(SlashCommandInteractionEvent event, int mediaTmdbId) throws Exception {
-        var member = event.getMember();
-
-        if (member == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
-            throw new IllegalAccessException("You must be an administrator to use this command");
-        }
-
-        MediaDetails mediaDetails = service.getMediaDetailsByTmdbId(mediaTmdbId);
+    public void addMedia(SlashCommandInteractionEvent event, String mediaId) {
+        MediaDetails mediaDetails = service.getMediaDetailsById(mediaId);
 
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setTitle(mediaDetails.title.substring(0, Math.min(mediaDetails.title.length(), 256)))
@@ -66,16 +67,9 @@ public abstract class AddMediaCommand {
                                 ? "movie/" : "tv/") + mediaDetails.ids.tmdbId(), "TMDB")
                 )
                 .addActionRow(
-                        Button.success("confirm-media:" + mediaTmdbId, "✅"),
+                        Button.success("confirm-media:" + mediaId, "✅"),
                         Button.danger("ignore-media", "❌")
                 )
                 .queue();
-    }
-
-    private String parseCurrency(Integer value) {
-        if (value == null || value == 0) {
-            return "Unknown";
-        }
-        return NumberFormat.getCurrencyInstance(Locale.US).format(value);
     }
 }

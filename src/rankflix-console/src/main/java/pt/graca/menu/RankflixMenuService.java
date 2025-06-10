@@ -3,7 +3,6 @@ package pt.graca.menu;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.RankflixException;
-import pt.graca.api.service.exceptions.review.InvalidRatingException;
 import pt.graca.infra.excel.ExcelImportResult;
 import pt.graca.infra.excel.ExcelService;
 
@@ -53,14 +52,10 @@ public class RankflixMenuService extends ConsoleMenu {
         String username = read("Enter the username: ");
         User user = service.findUserByUsername(username);
 
-        String mediaTmdbId = read("Enter the media's TMDB id: ");
+        String mediaId = read("Enter the media's internal id: ");
 
         String rating = read("Enter the averageRating: ");
-        try {
-            service.upsertReview(user.id, Integer.parseInt(mediaTmdbId), Float.parseFloat(rating), null);
-        } catch (NumberFormatException e) {
-            throw new InvalidRatingException(rating);
-        }
+        service.upsertReview(user.id, mediaId, Float.parseFloat(rating), null);
     }
 
     @ConsoleMenuOption("Delete review (bypass time limit)")
@@ -69,9 +64,9 @@ public class RankflixMenuService extends ConsoleMenu {
         User user = service.findUserByUsername(username);
         if (user == null) throw new NoSuchElementException("User not found");
 
-        int mediaTmdbId = Integer.parseInt(read("Enter the media's TMDB id: "));
+        String mediaId = read("Enter the media's internal id: ");
 
-        service.deleteReviewAdmin(mediaTmdbId, user.id);
+        service.deleteReviewAdmin(mediaId, user.id);
     }
 
     @ConsoleMenuOption("Import from Excel (delete everything first)")

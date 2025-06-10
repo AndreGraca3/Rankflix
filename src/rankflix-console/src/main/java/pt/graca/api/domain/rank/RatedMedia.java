@@ -1,7 +1,7 @@
 package pt.graca.api.domain.rank;
 
 public record RatedMedia(
-        int tmdbId,
+        String id,
         String title,
         float rating
 ) {

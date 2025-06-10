@@ -12,9 +12,9 @@ public class Consts {
         public static final String DESCRIPTION = "The name of the media";
     }
 
-    public static class MEDIA_TMDB_ID_OPTION {
-        public static final String NAME = "tmdb_id";
-        public static final String DESCRIPTION = "The TMDB ID of the media";
+    public static class MEDIA_ID_OPTION {
+        public static final String NAME = "media_id";
+        public static final String DESCRIPTION = "The internal ID of the media";
     }
 
     public static class RATING_OPTION {

@@ -4,14 +4,13 @@ package pt.graca.discord.command.media;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import pt.graca.discord.command.Consts.MEDIA_QUERY_OPTION;
-import pt.graca.discord.command.ICommand;
 import pt.graca.api.service.RankflixService;
+import pt.graca.discord.command.Consts.MEDIA_QUERY_OPTION;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddMediaBySearchCommand extends AddMediaCommand implements ICommand {
+public class AddMediaBySearchCommand extends AddMediaCommand {
 
     public AddMediaBySearchCommand(RankflixService service) {
         super(service);
@@ -29,15 +28,18 @@ public class AddMediaBySearchCommand extends AddMediaCommand implements ICommand
 
     @Override
     public List<OptionData> getOptions() {
-        List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.INTEGER,
-                MEDIA_QUERY_OPTION.NAME, MEDIA_QUERY_OPTION.DESCRIPTION, true, true));
-        return options;
+        return new ArrayList<>() {{
+            add(new OptionData(OptionType.STRING,
+                    MEDIA_QUERY_OPTION.NAME,
+                    MEDIA_QUERY_OPTION.DESCRIPTION,
+                    true,
+                    true));
+        }};
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId = event.getOption(MEDIA_QUERY_OPTION.NAME).getAsInt(); // tmdb id labeled as media-query
-        addMedia(event, mediaTmdbId);
+        String mediaId = event.getOption(MEDIA_QUERY_OPTION.NAME).getAsString(); // id labeled as MEDIA_QUERY_OPTION.NAME
+        addMedia(event, mediaId);
     }
 }

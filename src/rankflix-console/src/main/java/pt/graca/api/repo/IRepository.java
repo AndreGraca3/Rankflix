@@ -41,13 +41,13 @@ public interface IRepository {
      */
     List<Media> getAllSortedMedia(@Nullable String searchQuery, @Nullable UUID userId, @Nullable Integer limit);
 
-    Media findMediaByTmdbId(int mediaTmdbId);
+    Media findMediaById(String mediaId);
 
     void updateMedia(Media media);
 
     void deleteMedia(Media media);
 
-    MediaWatcher findWatcher(UUID userId, int mediaTmdbId);
+    MediaWatcher findWatcher(UUID userId, String mediaId);
 
     void clearList();
 }

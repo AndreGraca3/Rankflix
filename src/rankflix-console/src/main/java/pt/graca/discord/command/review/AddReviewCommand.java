@@ -37,15 +37,11 @@ public class AddReviewCommand implements ICommand {
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.INTEGER,
+        options.add(new OptionData(OptionType.STRING,
                 MEDIA_NAME_OPTION.NAME, MEDIA_NAME_OPTION.DESCRIPTION, true, true));
 
         var ratingOption = new OptionData(OptionType.NUMBER, Consts.RATING_OPTION.NAME, Consts.RATING_OPTION.DESCRIPTION, true);
         options.add(ratingOption);
-
-        for (float i = 0F; i <= 10F; i += 0.5F) {
-            ratingOption.addChoice(String.valueOf(i), i);
-        }
 
         options.add(new OptionData(OptionType.STRING,
                 Consts.COMMENT_OPTION.NAME, Consts.COMMENT_OPTION.DESCRIPTION, false));
@@ -54,13 +50,13 @@ public class AddReviewCommand implements ICommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // This is movieId as value labeled as name
+        String mediaId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsString(); // This is movieId as value labeled as MEDIA_NAME_OPTION.NAME
 
         float rating = (float) event.getOption(Consts.RATING_OPTION.NAME).getAsDouble();
         String comment = event.getOption("comment") != null ? event.getOption("comment").getAsString() : null;
 
-        var media = service.findRankedMediaByTmdbId(mediaTmdbId);
-        if (media == null) throw new MediaNotFoundException(mediaTmdbId);
+        var media = service.findRankedMediaById(mediaId);
+        if (media == null) throw new MediaNotFoundException(mediaId);
 
         var discordUser = event.getUser();
         User user = service.findUserByDiscordId(discordUser.getId());
@@ -69,10 +65,10 @@ public class AddReviewCommand implements ICommand {
             user = service.createDiscordUser(discordUser.getId(), discordUser.getName());
         }
 
-        MediaRatingUpdateResult ratingUpdate = service.upsertReview(user.id, mediaTmdbId, rating, comment);
+        MediaRatingUpdateResult ratingUpdate = service.upsertReview(user.id, mediaId, rating, comment);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                .setAuthor("| Review added", null, discordUser.getAvatarUrl())
+                .setAuthor("| Review added", null, discordUser.getEffectiveAvatarUrl())
                 .setDescription(comment)
                 .addField("Your rating", String.valueOf(rating), true)
                 .addField("List's Rating", String.valueOf(ratingUpdate.averageRating()), true)

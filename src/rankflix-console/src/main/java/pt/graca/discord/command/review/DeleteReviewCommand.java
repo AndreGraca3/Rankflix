@@ -36,14 +36,14 @@ public class DeleteReviewCommand implements ICommand {
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.INTEGER,
+        options.add(new OptionData(OptionType.STRING,
                 MEDIA_NAME_OPTION.NAME, MEDIA_NAME_OPTION.DESCRIPTION, true, true));
         return options;
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) throws Exception {
-        int mediaTmdbId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsInt(); // This is movieId as value labeled as name
+        String mediaId = event.getOption(MEDIA_NAME_OPTION.NAME).getAsString(); // This is movieId as value labeled as MEDIA_NAME_OPTION.NAME
 
         var discordUser = event.getUser();
         User user = service.findUserByDiscordId(discordUser.getId());
@@ -51,10 +51,10 @@ public class DeleteReviewCommand implements ICommand {
             throw new UserNotFoundException(discordUser.getId());
         }
 
-        service.deleteReview(mediaTmdbId, user.id);
+        service.deleteReview(mediaId, user.id);
 
         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                .setAuthor("| Rating deleted", null, discordUser.getAvatarUrl())
+                .setAuthor("| Rating deleted", null, discordUser.getEffectiveAvatarUrl())
                 .setColor(Color.GRAY)
                 .build()
         ).queue();

@@ -94,7 +94,7 @@ public class GenerateRankCommand implements ICommand {
         var discordUser = userOption == null ? null : userOption.getAsUser();
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor((discordUser == null ? "Global" : discordUser.getName()) + " Rank",
-                        null, discordUser == null ? null : discordUser.getAvatarUrl()
+                        null, discordUser == null ? null : discordUser.getEffectiveAvatarUrl()
                 )
                 .addField("Average",
                         String.format("%.2f", rankedMedia.averageRating()), true)

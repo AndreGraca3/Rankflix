@@ -11,23 +11,23 @@ import java.util.UUID;
 
 public class Media {
 
-    public final int tmdbId;
+    public final String id;
     public final String title;
     public final float averageRating;
     public final List<MediaWatcher> watchers;
     public final Instant createdAt;
     public boolean isImported = false;
 
-    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers) {
-        this.tmdbId = tmdbId;
+    public Media(String id, String title, float averageRating, List<MediaWatcher> watchers) {
+        this.id = id;
         this.title = title;
         this.averageRating = averageRating;
         this.watchers = watchers;
         this.createdAt = Instant.now();
     }
 
-    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers, boolean isImported) {
-        this.tmdbId = tmdbId;
+    public Media(String id, String title, float averageRating, List<MediaWatcher> watchers, boolean isImported) {
+        this.id = id;
         this.title = title;
         this.averageRating = averageRating;
         this.watchers = watchers;
@@ -35,8 +35,8 @@ public class Media {
         this.isImported = isImported;
     }
 
-    public Media(int tmdbId, String title, float averageRating, List<MediaWatcher> watchers, Instant createdAt, boolean isImported) {
-        this.tmdbId = tmdbId;
+    public Media(String id, String title, float averageRating, List<MediaWatcher> watchers, Instant createdAt, boolean isImported) {
+        this.id = id;
         this.title = title;
         this.averageRating = averageRating;
         this.watchers = watchers;
@@ -44,8 +44,8 @@ public class Media {
         this.isImported = isImported;
     }
 
-    public Media(int tmdbId, String title) {
-        this(tmdbId, title, 0, new ArrayList<>());
+    public Media(String id, String title) {
+        this(id, title, 0, new ArrayList<>());
     }
 
     public @Nullable MediaWatcher getWatcherByUserId(UUID userId) {
@@ -67,7 +67,7 @@ public class Media {
         List<MediaWatcher> newWatchers = new ArrayList<>(this.watchers);
         newWatchers.add(new MediaWatcher(userId, null));
 
-        return new Media(this.tmdbId, this.title, this.averageRating, newWatchers, this.createdAt, this.isImported);
+        return new Media(this.id, this.title, this.averageRating, newWatchers, this.createdAt, this.isImported);
     }
 
     public List<Review> getReviews() {
@@ -100,10 +100,6 @@ public class Media {
             if (currWatcher.userId.equals(userId)) {
                 isWatcher = true;
 
-                if (currWatcher.review != null) {
-                    // Current watcher had a review, remove it from the sum before adding the new one
-                    averagesSum -= currWatcher.review.rating;
-                }
                 newWatchers.set(i, new MediaWatcher(userId, review));
                 averagesSum += review.rating;
                 reviewsCount++;
@@ -122,7 +118,7 @@ public class Media {
 
         float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
 
-        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
+        return new Media(this.id, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
     }
 
     public Media removeReview(UUID userId) {
@@ -148,10 +144,22 @@ public class Media {
 
         float newAverageRating = reviewsCount > 0 ? averagesSum / reviewsCount : 0;
 
-        return new Media(this.tmdbId, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
+        return new Media(this.id, this.title, newAverageRating, newWatchers, this.createdAt, this.isImported);
     }
 
     public boolean isOlderThan(int seconds) {
         return Instant.now().getEpochSecond() - createdAt.getEpochSecond() > seconds;
+    }
+
+    public static String generateId(String externalId, MediaType mediaType) {
+        return mediaType == MediaType.MOVIE ? "M-" + externalId : "S-" + externalId;
+    }
+
+    public static MediaType getType(String mediaId) {
+        return mediaId.startsWith("M-") ? MediaType.MOVIE : MediaType.TV_SHOW;
+    }
+
+    public static String getExternalId(String mediaId) {
+        return mediaId.substring(2);
     }
 }

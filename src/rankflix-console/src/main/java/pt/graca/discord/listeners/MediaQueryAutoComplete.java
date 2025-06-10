@@ -3,9 +3,9 @@ package pt.graca.discord.listeners;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import org.jetbrains.annotations.NotNull;
-import pt.graca.discord.command.Consts;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.results.MediaDetailsItem;
+import pt.graca.discord.command.Consts;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class MediaQueryAutoComplete implements IAutoComplete {
                                         m.type(),
                                         m.title().length() > 50 ? m.title().substring(0, 50) + "..." : m.title(),
                                         (m.releaseDate() != null ? m.releaseDate().getYear() : "Some year")),
-                                m.tmdbId()
+                                m.id()
                         ))
                         .limit(25)
                         .toList()

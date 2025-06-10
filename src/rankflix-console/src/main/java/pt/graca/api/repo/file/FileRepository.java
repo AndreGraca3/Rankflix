@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
+
 public class FileRepository implements IRepository {
 
     public FileRepository(Gson gson, String folderName, String listName) throws IOException {
@@ -122,9 +123,9 @@ public class FileRepository implements IRepository {
                 .toList();
     }
 
-    public Media findMediaByTmdbId(int mediaTmdbId) {
+    public Media findMediaById(String mediaId) {
         for (Media media : rankflixList.media) {
-            if (media.tmdbId == mediaTmdbId) {
+            if (media.id == mediaId) {
                 return media;
             }
         }
@@ -134,7 +135,7 @@ public class FileRepository implements IRepository {
     @Override
     public void updateMedia(Media media) {
         for (int i = 0; i < rankflixList.media.size(); i++) {
-            if (rankflixList.media.get(i).tmdbId == media.tmdbId) {
+            if (rankflixList.media.get(i).id == media.id) {
                 rankflixList.media.set(i, media);
                 return;
             }
@@ -147,8 +148,8 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public MediaWatcher findWatcher(UUID userId, int mediaTmdbId) {
-        var media = findMediaByTmdbId(mediaTmdbId);
+    public MediaWatcher findWatcher(UUID userId, String mediaId) {
+        var media = findMediaById(mediaId);
         if (media == null) return null;
 
         return media.getWatcherByUserId(userId);
