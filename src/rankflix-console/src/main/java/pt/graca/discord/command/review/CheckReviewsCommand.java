@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class CheckReviewsCommand implements ICommand {
 
@@ -97,17 +98,18 @@ public class CheckReviewsCommand implements ICommand {
     private void checkReviewsForMedia(SlashCommandInteractionEvent event, Media media, MediaDetails mediaDetails) {
         String userRatingsString = media.watchers.parallelStream()
                 .map(w -> {
-                    User user;
                     try {
-                        user = service.findUserById(w.userId);
+                        User user = service.findUserById(w.userId);
+                        String rating = (w.review != null) ? String.valueOf(w.review.rating) : "Unrated";
+                        return String.format("<@%s> => %s%s",
+                                user.discordId,
+                                rating,
+                                (w.review != null && w.review.comment != null) ? " 💬" : "");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                    return String.format("%s => %s",
-                            "<@" + user.discordId + ">", w.review != null ? w.review.rating : "Unrated"
-                    );
                 })
-                .reduce("", (a, b) -> a + "\n" + b);
+                .collect(Collectors.joining("\n"));
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle(mediaDetails.title)

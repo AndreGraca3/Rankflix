@@ -75,7 +75,7 @@ public class ExcelService {
                         : ratingCell.getStringCellValue();
 
                 String[] ratingAndCommentArr = ratingAndComment.split(" - ");
-                float rating = Float.parseFloat(ratingAndCommentArr[0]);
+                float rating = Float.parseFloat(ratingAndCommentArr[0].replace(",", "."));
                 String comment = ratingAndCommentArr.length > 1 ? ratingAndCommentArr[1] : null;
 
                 watchers.add(new MediaWatcher(user.id, new Review(rating, comment)));
@@ -157,7 +157,7 @@ public class ExcelService {
                 if (watcher == null) {
                     cell.setCellStyle(redStyle);
                 } else if (watcher.review != null) {
-                    cell.setCellValue(watcher.review.rating + (watcher.review.comment != null ? watcher.review.rating + " - " + watcher.review.comment : ""));
+                    cell.setCellValue(watcher.review.rating + (watcher.review.comment != null ? " - " + watcher.review.comment : ""));
                     cell.setCellStyle(defaultStyle);
                 } else {
                     cell.setCellStyle(yellowStyle);
