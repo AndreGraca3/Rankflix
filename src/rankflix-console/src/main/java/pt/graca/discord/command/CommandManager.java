@@ -23,7 +23,8 @@ public class CommandManager extends ListenerAdapter {
             for (Guild guild : event.getJDA().getGuilds()) {
                 guild.updateCommands()
                         .addCommands(commands.stream().map(cmd ->
-                                Commands.slash(cmd.getName(), cmd.getDescription())
+                                Commands.slash(cmd.getName(),
+                                                cmd.getDescription() + (cmd.isAdminCommand() ? " (Admin only)" : ""))
                                         .addOptions(cmd.getOptions())).toList()
                         ).queue();
             }

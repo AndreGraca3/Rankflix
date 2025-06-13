@@ -25,8 +25,6 @@ public abstract class AddMediaCommand implements ICommand {
         return true;
     }
 
-    ;
-
     protected final RankflixService service;
 
     public void addMedia(SlashCommandInteractionEvent event, String mediaId) {
