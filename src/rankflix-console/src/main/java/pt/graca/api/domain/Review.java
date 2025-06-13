@@ -6,7 +6,7 @@ import java.time.Instant;
 
 public class Review {
 
-    public static final int MAX_COMMENT_LENGTH = 100;
+    public static final int MAX_COMMENT_LENGTH = 200;
 
     public Review(float rating, @Nullable String comment, Instant createdAt) {
         validateReview(rating, comment);

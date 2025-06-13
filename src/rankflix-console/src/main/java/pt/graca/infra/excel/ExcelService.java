@@ -103,6 +103,7 @@ public class ExcelService {
 
         // Create basic cell styles
         CellStyle defaultStyle = workbook.createCellStyle();
+        defaultStyle.setWrapText(true);
         defaultStyle.setAlignment(HorizontalAlignment.CENTER);
         defaultStyle.setVerticalAlignment(VerticalAlignment.CENTER);
         defaultStyle.setBorderTop(BorderStyle.THIN);
@@ -172,8 +173,14 @@ public class ExcelService {
 
         // Autosize columns
         int totalColumns = averageRateColumnIdx + 1;
+        int maxWidth = 10000;  // Max width in units (approx 10000 = ~100 chars wide)
+
         for (int i = 0; i < totalColumns; i++) {
             sheet.autoSizeColumn(i);
+            int currentWidth = sheet.getColumnWidth(i);
+            if (currentWidth > maxWidth) {
+                sheet.setColumnWidth(i, maxWidth);
+            }
         }
 
         // Add row below the last media to write user averages
