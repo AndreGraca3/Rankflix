@@ -15,6 +15,7 @@ import pt.graca.api.service.exceptions.media.MediaNotFoundException;
 import pt.graca.api.service.exceptions.review.ExpiredException;
 import pt.graca.api.service.exceptions.review.InvalidReviewTargetException;
 import pt.graca.api.service.exceptions.review.ReviewNotFoundException;
+import pt.graca.api.service.exceptions.user.DiscordUserAlreadyExistsException;
 import pt.graca.api.service.exceptions.user.UserAlreadyExistsException;
 import pt.graca.api.service.exceptions.user.UserNotFoundException;
 import pt.graca.api.service.results.MediaDetails;
@@ -45,13 +46,13 @@ public class RankflixService {
         });
     }
 
-    public User createUser(String username, String avatarUrl) throws RankflixException {
+    public User createUser(String username) throws RankflixException {
         return trManager.run(ctx -> {
             if (ctx.getRepository().findUserByUsername(username) != null) {
                 throw new UserAlreadyExistsException(username);
             }
 
-            User user = new User(username, avatarUrl);
+            User user = new User(username);
             ctx.getRepository().insertUser(user);
             return user;
         });
@@ -64,7 +65,7 @@ public class RankflixService {
             }
 
             if (ctx.getRepository().findUserByDiscordId(discordId) != null) {
-                throw new UserAlreadyExistsException(discordId);
+                throw new DiscordUserAlreadyExistsException(discordId);
             }
 
             User user = new User(discordId, username);
@@ -75,7 +76,7 @@ public class RankflixService {
 
     public List<User> getAllUsers(@Nullable List<UUID> userIds) throws RankflixException {
         return trManager.run(ctx -> {
-            return ctx.getRepository().getAllUsers(userIds);
+            return ctx.getRepository().getAllUsersFromCurrentList(userIds);
         });
     }
 
@@ -109,9 +110,9 @@ public class RankflixService {
         });
     }
 
-    public void deleteAllUsers() throws RankflixException {
+    public void deleteUsersFromCurrentList() throws RankflixException {
         trManager.run(ctx -> {
-            ctx.getRepository().deleteAllUsers();
+            ctx.getRepository().deleteUsersFromCurrentList();
         });
     }
 
@@ -215,10 +216,19 @@ public class RankflixService {
 
             AtomicReference<Float> totalAverageRating = new AtomicReference<>(0f);
             AtomicInteger totalRatings = new AtomicInteger(0);
+            AtomicInteger totalWatched = new AtomicInteger(0);
 
             var ratedMedia = mediaStream.map(media -> {
                         if (userId != null) {
-                            var userReview = media.getReviewByUserId(userId);
+                            var userWatcher = media.getWatcherByUserId(userId);
+
+                            if (userWatcher == null) {
+                                return null;
+                            }
+
+                            totalWatched.incrementAndGet();
+
+                            var userReview = userWatcher.review;
 
                             if (userReview == null) {
                                 return null;
@@ -232,13 +242,17 @@ public class RankflixService {
 
                         totalAverageRating.updateAndGet(v -> v + media.averageRating);
                         totalRatings.addAndGet(media.getReviews().size());
+                        totalWatched.incrementAndGet();
 
                         return new RatedMedia(media.id, media.title, media.averageRating);
                     })
                     .filter(Objects::nonNull)
                     .toList();
 
-            return new RankedMedia(ratedMedia, totalAverageRating.get() / ratedMedia.size(), totalRatings.get());
+            return new RankedMedia(ratedMedia,
+                    totalAverageRating.get() / ratedMedia.size(),
+                    totalRatings.get(),
+                    totalWatched.get());
         });
     }
 
@@ -345,6 +359,12 @@ public class RankflixService {
     public void clearList() throws RankflixException {
         trManager.run(ctx -> {
             ctx.getRepository().clearList();
+        });
+    }
+
+    public void deleteList() throws RankflixException {
+        trManager.run(ctx -> {
+            ctx.getRepository().deleteList();
         });
     }
 }

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
 import pt.graca.api.domain.rank.RankedMedia;
 import pt.graca.api.service.RankflixService;
+import pt.graca.api.service.exceptions.user.UserNotFoundException;
 import pt.graca.discord.command.ICommand;
 import pt.graca.infra.generator.factory.RankGeneratorFactory;
 import pt.graca.infra.generator.factory.RankGeneratorType;
@@ -16,7 +17,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class GenerateRankCommand implements ICommand {
 
@@ -61,7 +61,7 @@ public class GenerateRankCommand implements ICommand {
                 : rankflixService.findUserByDiscordId(userOption.getAsUser().getId());
 
         if (userOption != null && user == null) {
-            throw new NoSuchElementException("User not found");
+            throw new UserNotFoundException();
         }
 
         RankedMedia rankedMedia = rankflixService.getTopRankedMedia(null, user != null ? user.id : null);
@@ -92,6 +92,7 @@ public class GenerateRankCommand implements ICommand {
 
         // create the embed
         var discordUser = userOption == null ? null : userOption.getAsUser();
+
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor((discordUser == null ? "Global" : discordUser.getName()) + " Rank",
                         null, discordUser == null ? null : discordUser.getEffectiveAvatarUrl()
@@ -100,6 +101,7 @@ public class GenerateRankCommand implements ICommand {
                         String.format("%.2f", rankedMedia.averageRating()), true)
                 .addField("Total Ratings",
                         String.valueOf(rankedMedia.totalRatings()), true)
+                .addField("Total watched", String.valueOf(rankedMedia.totalWatched()), true)
                 .setColor(Color.YELLOW);
 
         if (generatorType == RankGeneratorType.CHART) {

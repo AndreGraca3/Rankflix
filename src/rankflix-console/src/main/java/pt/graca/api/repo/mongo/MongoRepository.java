@@ -30,12 +30,14 @@ public class MongoRepository implements IRepository {
         listsCollection.createIndex(new Document("media.id", 1), new IndexOptions().unique(true).sparse(true));
         listsCollection.createIndex(new Document("media.averageRating", 1), new IndexOptions().sparse(true));
         listsCollection.createIndex(new Document("media.watchers.userId", 1), new IndexOptions().sparse(true));
+        listsCollection.createIndex(new Document("users.id", 1), new IndexOptions().unique(true));
 
         if (listsCollection.find(new Document("name", listName)).first() != null) return;
 
         listsCollection.insertOne(new Document()
                 .append("name", listName)
                 .append("media", List.of())
+                .append("users", List.of())
         );
     }
 
@@ -50,93 +52,129 @@ public class MongoRepository implements IRepository {
 
     @Override
     public void insertUser(User user) {
-        database.getCollection("users")
-                .insertOne(session, new Document()
-                        .append("username", user.username)
-                        .append("_id", user.id.toString())
-                        .append("discordId", user.discordId)
+        database.getCollection("lists")
+                .updateOne(session, new Document("name", listName),
+                        new Document("$push", new Document("users", new Document()
+                                .append("id", user.id.toString())
+                                .append("username", user.username)
+                                .append("discordId", user.discordId)
+                        ))
                 );
     }
 
     public void insertUserRange(List<User> users) {
-        database.getCollection("users")
-                .insertMany(session, users.stream()
-                        .map(user -> new Document()
-                                .append("username", user.username)
-                                .append("_id", user.id.toString())
-                                .append("discordId", user.discordId)
-                        )
-                        .toList()
-                );
+        List<Document> userDocs = users.stream().map(user -> new Document()
+                .append("id", user.id.toString())
+                .append("username", user.username)
+                .append("discordId", user.discordId)
+        ).toList();
+
+        database.getCollection("lists").updateOne(
+                session,
+                new Document("name", listName),
+                new Document("$push", new Document("users", new Document("$each", userDocs)))
+        );
     }
 
     @Override
-    public List<User> getAllUsers(List<UUID> ids) {
-        var collection = database.getCollection("users");
-        var filter = (ids == null)
-                ? new Document()
-                : new Document("_id", new Document("$in", ids.stream().map(UUID::toString).toList()));
+    public List<User> getAllUsersFromCurrentList(List<UUID> ids) {
+        if (ids == null) return List.of();
 
-        return collection.find(session, filter)
+        var idStrings = ids.stream().map(UUID::toString).toList();
+        var document = database.getCollection("lists")
+                .find(session, Filters.eq("name", listName))
+                .projection(Projections.include("users"))
+                .first();
+
+        if (document == null) return List.of();
+
+        var users = document.getList("users", Document.class);
+
+        return users.stream()
+                .filter(doc -> idStrings.contains(doc.getString("id")))
                 .map(doc -> new User(
-                        UUID.fromString(doc.getString("_id")),
+                        UUID.fromString(doc.getString("id")),
                         doc.getString("discordId"),
                         doc.getString("username")
                 ))
-                .into(new ArrayList<>());
+                .toList();
     }
 
     @Override
     public void updateUser(User user) {
-        database.getCollection("users")
-                .updateOne(session, new Document("_id", user.id.toString()),
-                        new Document("$set", new Document()
+        database.getCollection("lists")
+                .updateOne(session, new Document("name", listName),
+                        new Document("$set", new Document("users.$", new Document()
+                                .append("id", user.id.toString())
                                 .append("username", user.username)
                                 .append("discordId", user.discordId)
-                        )
+                        ))
                 );
     }
 
     @Override
     public User findUserByUsername(String username) {
-        return database.getCollection("users")
-                .find(session, new Document("username", username))
-                .map(document -> new User(
-                        UUID.fromString(document.getString("_id")),
-                        document.getString("discordId"),
-                        document.getString("username")
+        return database.getCollection("lists")
+                .find(session, new Document("name", listName))
+                .map(document -> document.getList("users", Document.class))
+                .first()
+                .stream()
+                .filter(userDoc -> userDoc.getString("username").equals(username))
+                .map(userDoc -> new User(
+                        UUID.fromString(userDoc.getString("id")),
+                        userDoc.getString("discordId"),
+                        userDoc.getString("username")
                 ))
-                .first();
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public User findUserById(UUID userId) {
-        return database.getCollection("users")
-                .find(session, new Document("_id", userId.toString()))
-                .map(document -> new User(
-                        UUID.fromString(document.getString("_id")),
-                        document.getString("discordId"),
-                        document.getString("username")
+        return database.getCollection("lists")
+                .find(session, new Document("name", listName))
+                .map(document -> document.getList("users", Document.class))
+                .first()
+                .stream()
+                .filter(userDoc -> userDoc.getString("id").equals(userId.toString()))
+                .map(userDoc -> new User(
+                        UUID.fromString(userDoc.getString("id")),
+                        userDoc.getString("discordId"),
+                        userDoc.getString("username")
                 ))
-                .first();
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public User findUserByDiscordId(String discordId) {
-        return database.getCollection("users")
-                .find(session, new Document("discordId", discordId))
-                .map(document -> new User(
-                        UUID.fromString(document.getString("_id")),
-                        document.getString("discordId"),
-                        document.getString("username")
-                ))
+        Document listDoc = database.getCollection("lists")
+                .find(session, new Document("name", listName))
+                .projection(Projections.include("users"))
                 .first();
+
+        if (listDoc == null) return null;
+
+        List<Document> users = listDoc.getList("users", Document.class);
+        if (users == null) return null;
+
+        return users.stream()
+                .filter(userDoc -> discordId.equals(userDoc.getString("discordId")))
+                .map(userDoc -> new User(
+                        UUID.fromString(userDoc.getString("id")),
+                        userDoc.getString("discordId"),
+                        userDoc.getString("username")
+                ))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
-    public void deleteAllUsers() {
-        database.getCollection("users")
-                .deleteMany(session, new Document());
+    public void deleteUsersFromCurrentList() {
+        database.getCollection("lists")
+                .updateOne(session, new Document("name", listName),
+                        new Document("$set", new Document("users", List.of()))
+                );
     }
 
     @Override
@@ -296,8 +334,14 @@ public class MongoRepository implements IRepository {
     public void clearList() {
         database.getCollection("lists")
                 .updateOne(session, new Document("name", listName),
-                        new Document("$set", new Document("media", List.of()))
+                        new Document("$set", new Document("media", List.of()).append("users", List.of()))
                 );
+    }
+
+    @Override
+    public void deleteList() {
+        database.getCollection("lists")
+                .deleteOne(session, new Document("name", listName));
     }
 
     // helper methods to map object to a document

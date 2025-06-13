@@ -22,7 +22,7 @@ public class Review {
     }
 
     public final float rating;
-    public final String comment;
+    public final @Nullable String comment;
     public Instant createdAt = Instant.now();
 
     private void validateReview(float rating, @Nullable String comment) {

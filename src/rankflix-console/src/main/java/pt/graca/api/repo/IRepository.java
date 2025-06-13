@@ -17,7 +17,7 @@ public interface IRepository {
 
     void updateUser(User user);
 
-    List<User> getAllUsers(@Nullable List<UUID> userIds);
+    List<User> getAllUsersFromCurrentList(@Nullable List<UUID> userIds);
 
     User findUserByUsername(String username);
 
@@ -25,7 +25,7 @@ public interface IRepository {
 
     User findUserByDiscordId(String discordId);
 
-    void deleteAllUsers();
+    void deleteUsersFromCurrentList();
 
     void insertMedia(Media media);
 
@@ -50,4 +50,6 @@ public interface IRepository {
     MediaWatcher findWatcher(UUID userId, String mediaId);
 
     void clearList();
+
+    void deleteList();
 }

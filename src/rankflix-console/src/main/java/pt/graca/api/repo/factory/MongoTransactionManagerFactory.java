@@ -3,6 +3,7 @@ package pt.graca.api.repo.factory;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import pt.graca.api.repo.mongo.MongoTransactionManager;
 import pt.graca.api.repo.transaction.ITransactionManager;
 
@@ -56,7 +57,16 @@ public class MongoTransactionManagerFactory extends TransactionManagerFactory {
         System.out.println("-".repeat(50));
 
         if (listName == null || listName.isBlank()) {
-            throw new IllegalArgumentException("List name cannot be blank");
+            if (option != 0) {
+                throw new IllegalArgumentException("List name cannot be blank");
+            } else {
+                System.out.print("New list name: ");
+                do {
+                    listName = scanner.nextLine();
+                } while (listName.isBlank());
+                database.getCollection("lists").insertOne(new Document().append("name", listName).append("media",
+                        new ArrayList<>()).append("users", new ArrayList<>()));
+            }
         }
 
         return new MongoTransactionManager(mongoClient, listName);

@@ -63,7 +63,7 @@ public class FileRepository implements IRepository {
     }
 
     @Override
-    public List<User> getAllUsers(List<UUID> userIds) {
+    public List<User> getAllUsersFromCurrentList(List<UUID> userIds) {
         if (userIds == null) {
             return rankflixList.users;
         }
@@ -91,6 +91,11 @@ public class FileRepository implements IRepository {
     }
 
     @Override
+    public void deleteUsersFromCurrentList() {
+        rankflixList.users.clear();
+    }
+
+    @Override
     public User findUserByDiscordId(String discordId) {
         for (User user : rankflixList.users) {
             if (user.discordId.equals(discordId)) {
@@ -98,11 +103,6 @@ public class FileRepository implements IRepository {
             }
         }
         return null;
-    }
-
-    @Override
-    public void deleteAllUsers() {
-        rankflixList.users.clear();
     }
 
     public void insertMedia(Media media) {
@@ -159,6 +159,12 @@ public class FileRepository implements IRepository {
     public void clearList() {
         rankflixList.media.clear();
         rankflixList.users.clear();
+    }
+
+    @Override
+    public void deleteList() {
+        File file = new File(fileLocation);
+        file.delete();
     }
 
     // transaction methods, doest work with concurrent transactions, so just don't use this repo

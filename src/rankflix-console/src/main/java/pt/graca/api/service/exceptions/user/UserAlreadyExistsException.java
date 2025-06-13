@@ -7,3 +7,4 @@ public class UserAlreadyExistsException extends RankflixException {
         super("User \"" + username + "\" already exists", 409);
     }
 }
+

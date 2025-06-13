@@ -35,7 +35,7 @@ public class AddMediaUserSelectorListener extends ListenerAdapter {
                 String mediaId = componentId.split(":")[1];
 
                 List<UUID> userIds = discordUsers.stream().map(u -> {
-                    var discordId = u.getId();
+                    String discordId = u.getId();
 
                     try {
                         var user = service.findUserByDiscordId(discordId);

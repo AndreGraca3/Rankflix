@@ -25,7 +25,7 @@ public class RankflixMenuService extends ConsoleMenu {
     @ConsoleMenuOption("Create a new user")
     public void createUser() throws Exception {
         String username = read("Enter the username:");
-        service.createUser(username, null);
+        service.createUser(username);
     }
 
     @ConsoleMenuOption("List all users")
@@ -69,14 +69,14 @@ public class RankflixMenuService extends ConsoleMenu {
         service.deleteReviewAdmin(mediaId, user.id);
     }
 
-    @ConsoleMenuOption("Import from Excel (delete everything first)")
+    @ConsoleMenuOption("Import from Excel (resets list)")
     public void importFromExcel() throws Exception {
         String path = read("Enter the path to the Excel file: ");
 
         ExcelImportResult importedExcelRes = ExcelService.importMedia(path.replace("\"", ""));
 
-        System.out.println("Deleting everything...");
-        deleteEverything();
+        System.out.println("Deleting list...");
+        service.clearList();
 
         System.out.println("Importing, this may take a while...");
         service.importMediasWithWatchersRange(importedExcelRes.importedMedia(), importedExcelRes.importedUsers());
@@ -96,9 +96,14 @@ public class RankflixMenuService extends ConsoleMenu {
         }
     }
 
-    @ConsoleMenuOption("Reset")
-    public void deleteEverything() throws RankflixException {
+    @ConsoleMenuOption("Reset list")
+    public void clearList() throws RankflixException {
         service.clearList();
-        service.deleteAllUsers();
+    }
+
+    @ConsoleMenuOption("Delete List")
+    public void deleteList() throws RankflixException {
+        service.deleteList();
+        System.exit(0);
     }
 }

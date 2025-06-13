@@ -59,10 +59,12 @@ public class AddReviewCommand implements ICommand {
         if (media == null) throw new MediaNotFoundException(mediaId);
 
         var discordUser = event.getUser();
-        User user = service.findUserByDiscordId(discordUser.getId());
+        String discordId = discordUser.getId();
+
+        User user = service.findUserByDiscordId(discordId);
 
         if (user == null) {
-            user = service.createDiscordUser(discordUser.getId(), discordUser.getName());
+            user = service.createDiscordUser(discordId, discordUser.getName());
         }
 
         MediaRatingUpdateResult ratingUpdate = service.upsertReview(user.id, mediaId, rating, comment);

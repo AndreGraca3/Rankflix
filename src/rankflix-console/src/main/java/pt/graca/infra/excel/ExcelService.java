@@ -61,18 +61,24 @@ public class ExcelService {
 
             for (int j = FIRST_USER_RATE_COLUMN_IDX; j < averageRateColumnIdx; j++) {
                 var ratingCell = row.getCell(j);
+                User user = columnIdxToUser.get(j);
 
                 if (ratingCell.getCellType() == CellType.BLANK) {
                     if (!isYellowBackground(ratingCell)) continue;
-                    User user = columnIdxToUser.get(j);
                     watchers.add(new MediaWatcher(user.id, null));
                     continue;
                 }
 
-                float rating = (float) ratingCell.getNumericCellValue();
+                // get rating and/or comment -> format: [rating] - [comment]
+                String ratingAndComment = ratingCell.getCellType() == CellType.NUMERIC ?
+                        String.valueOf(ratingCell.getNumericCellValue())
+                        : ratingCell.getStringCellValue();
 
-                User user = columnIdxToUser.get(j);
-                watchers.add(new MediaWatcher(user.id, new Review(rating, null)));
+                String[] ratingAndCommentArr = ratingAndComment.split(" - ");
+                float rating = Float.parseFloat(ratingAndCommentArr[0]);
+                String comment = ratingAndCommentArr.length > 1 ? ratingAndCommentArr[1] : null;
+
+                watchers.add(new MediaWatcher(user.id, new Review(rating, comment)));
             }
 
             var averageRating = (float) row.getCell(averageRateColumnIdx).getNumericCellValue();
@@ -151,7 +157,7 @@ public class ExcelService {
                 if (watcher == null) {
                     cell.setCellStyle(redStyle);
                 } else if (watcher.review != null) {
-                    cell.setCellValue(watcher.review.rating);
+                    cell.setCellValue(watcher.review.rating + (watcher.review.comment != null ? watcher.review.rating + " - " + watcher.review.comment : ""));
                     cell.setCellStyle(defaultStyle);
                 } else {
                     cell.setCellStyle(yellowStyle);
