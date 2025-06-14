@@ -242,7 +242,7 @@ public class RankflixService {
 
                         totalAverageRating.updateAndGet(v -> v + media.averageRating);
                         totalRatings.addAndGet(media.getReviews().size());
-                        totalWatched.incrementAndGet();
+                        totalWatched.addAndGet(media.watchers.size());
 
                         return new RatedMedia(media.id, media.title, media.averageRating);
                     })

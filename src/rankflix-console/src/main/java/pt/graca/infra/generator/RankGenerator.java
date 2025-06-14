@@ -20,7 +20,7 @@ public abstract class RankGenerator {
         String rating = String.format("%.2f", media.rating());
 
         // Calculate available space for the title based on the length of the rating
-        int maxTitleLength = 30 - (rating.length() + 5); // 5 spaces for the " (" and the closing parenthesis
+        int maxTitleLength = 40 - (rating.length() + 5); // 5 spaces for the " (" and the closing parenthesis
         if (title.length() > maxTitleLength) {
             // Truncate title to fit space for the rating
             title = title.substring(0, maxTitleLength - 3) + "...";
