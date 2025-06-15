@@ -38,7 +38,9 @@ public class RankflixService {
     private final ITransactionManager trManager;
     private final IContentProvider contentProvider;
 
-    private static final int MAX_MEDIA_AGE_SECS = 24 * 60 * 60; // 24 hours
+    private static final int MAX_MEDIA_AGE_SECS = System.getenv("RANKFLIX_MAX_MEDIA_AGE_SECS") != null ? Integer.parseInt(
+            System.getenv(
+                    "RANKFLIX_MAX_MEDIA_AGE_SECS")) : 24 * 60 * 60; // 24 hours
 
     public String getCurrentListName() throws RankflixException {
         return trManager.run(ctx -> {

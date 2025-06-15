@@ -102,14 +102,14 @@ public class MongoRepository implements IRepository {
 
     @Override
     public void updateUser(User user) {
-        database.getCollection("lists")
-                .updateOne(session, new Document("name", listName),
-                        new Document("$set", new Document("users.$", new Document()
-                                .append("id", user.id.toString())
-                                .append("username", user.username)
-                                .append("discordId", user.discordId)
-                        ))
-                );
+        database.getCollection("lists").updateOne(
+                new Document("name", listName).append("users.id", user.id.toString()),
+                new Document("$set", new Document("users.$", new Document()
+                        .append("id", user.id.toString())
+                        .append("username", user.username)
+                        .append("discordId", user.discordId)
+                ))
+        );
     }
 
     @Override

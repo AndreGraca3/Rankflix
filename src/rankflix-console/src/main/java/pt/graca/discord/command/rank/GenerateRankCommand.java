@@ -30,7 +30,7 @@ public class GenerateRankCommand implements ICommand {
 
     @Override
     public String getName() {
-        return "generate-rank";
+        return "rank";
     }
 
     @Override
@@ -94,7 +94,7 @@ public class GenerateRankCommand implements ICommand {
         var discordUser = userOption == null ? null : userOption.getAsUser();
 
         EmbedBuilder embedBuilder = new EmbedBuilder()
-                .setAuthor((discordUser == null ? "Global" : discordUser.getName()) + " Rank",
+                .setAuthor((discordUser == null ? "List" : discordUser.getName()) + " Rank",
                         null, discordUser == null ? null : discordUser.getEffectiveAvatarUrl()
                 )
                 .addField("Average",
@@ -104,14 +104,10 @@ public class GenerateRankCommand implements ICommand {
                 .addField("Total watched", String.valueOf(rankedMedia.totalWatched()), true)
                 .setColor(Color.YELLOW);
 
-        if (generatorType == RankGeneratorType.CHART) {
-            embedBuilder.setImage(rankUrl);
-        }
-
         switch (generatorType) {
             case CHART -> embedBuilder.setImage(rankUrl);
-            case CANVAS -> {
-            }
+            case CANVAS -> embedBuilder.setImage("attachment://" + "rank.png");
+
             default -> embedBuilder.setUrl(rankUrl);
         }
 
