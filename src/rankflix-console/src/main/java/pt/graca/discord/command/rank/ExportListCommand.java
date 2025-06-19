@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import pt.graca.Utils;
 import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
@@ -60,7 +61,7 @@ public class ExportListCommand implements ICommand {
         excelExporter.exportList(media, users, file -> {
             EmbedBuilder embedBuilder = new EmbedBuilder()
                     .setTitle("List exported successfully")
-                    .addField("Export time", (System.currentTimeMillis() - currentTime) / 1000 + " seconds", true)
+                    .addField("Export time", Utils.formatMillisToTime(System.currentTimeMillis() - currentTime), true)
                     .setColor(Color.GREEN);
 
             event.getHook().sendMessageEmbeds(embedBuilder.build())

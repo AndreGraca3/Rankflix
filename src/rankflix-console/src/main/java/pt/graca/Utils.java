@@ -63,6 +63,10 @@ public class Utils {
         return result.toString();
     }
 
+    public static String formatMillisToTime(long totalMillis) {
+        return Utils.formatSecondsToTime((int) (totalMillis / 1000));
+    }
+
     public static String getUserHomePath() {
         String os = System.getProperty("os.name").toLowerCase();
 

@@ -1,5 +1,7 @@
 package pt.graca.menu;
 
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import pt.graca.api.domain.user.User;
 import pt.graca.api.service.RankflixService;
 import pt.graca.api.service.exceptions.RankflixException;
@@ -7,6 +9,7 @@ import pt.graca.infra.excel.ExcelImportResult;
 import pt.graca.infra.excel.ExcelService;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -73,7 +76,10 @@ public class RankflixMenuService extends ConsoleMenu {
     public void importFromExcel() throws Exception {
         String path = read("Enter the path to the Excel file: ");
 
-        ExcelImportResult importedExcelRes = ExcelService.importMedia(path.replace("\"", ""));
+        FileInputStream file = new FileInputStream(path.replace("\"", ""));
+        Workbook workbook = new XSSFWorkbook(file);
+
+        ExcelImportResult importedExcelRes = ExcelService.importMediaFromWorkbook(workbook);
 
         System.out.println("Deleting list...");
         service.clearList();

@@ -9,7 +9,6 @@ import pt.graca.api.domain.media.Media;
 import pt.graca.api.domain.media.MediaWatcher;
 import pt.graca.api.domain.user.User;
 
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,9 +27,7 @@ public class ExcelService {
     private static final int MEDIA_IDS_COLUMN_IDX = getColumnIdx('C');
     private static final int MEDIA_TITLES_COLUMN_IDX = getColumnIdx('D');
 
-    public static ExcelImportResult importMedia(String fileLocation) throws IOException {
-        FileInputStream file = new FileInputStream(fileLocation);
-        Workbook workbook = new XSSFWorkbook(file);
+    public static ExcelImportResult importMediaFromWorkbook(Workbook workbook) {
         Sheet sheet = workbook.getSheetAt(0);
 
         Row userIdsRow = sheet.getRow(USER_DISCORD_IDS_ROW_IDX);

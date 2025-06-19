@@ -40,6 +40,7 @@ public class DiscordBotService {
         commandManager.add(new DeleteReviewCommand(rankflixService));
         commandManager.add(new GenerateRankCommand(rankflixService, rankGeneratorFactory));
         commandManager.add(new ExportListCommand(rankflixService, new ExcelExporter()));
+        commandManager.add(new ImportListCommand(rankflixService));
 
         var autoCompletes = new AutoCompleteManager();
         autoCompletes.add(new MediaQueryAutoComplete(rankflixService));
